@@ -104,6 +104,8 @@ class OryxLossesSummary(ETL):
 
     def transform(self):
         self._filter_base_cols()
+        self._extract_data()
+        self._filter_final_cols()
 
     def load(self, path: Union[Path, str]):
         self.data.write.option("header", True).mode("overwrite").csv(path)
