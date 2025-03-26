@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import trim
+from pyspark.sql import dataframe
 
 
 # class for holding/governing/getting Spark session
@@ -19,9 +20,9 @@ def create_spark_session(appname: str, config: dict) -> SparkSession:
 
 # Abstract class for spark jobs to be implemented
 class ETL(ABC):
-    def __init__(self, source: Union[Path, str], sparks_ession):
+    def __init__(self, source: Union[Path, str], sparks_session: SparkSession):
         self.source = source
-        self.sparks_ession = sparks_ession
+        self.sparks_session = sparks_session
         self.data = None
 
     @abstractmethod
@@ -48,7 +49,7 @@ class ETLJob:
 # Input is spark session, data(frame?) and cols to keep/remove
 
 
-def trim_df(spark_df):
+def trim_df(spark_df: dataframe) -> dataframe:
     """
     Removing whitespace from start/end of all columns
     """

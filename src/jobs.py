@@ -1,6 +1,10 @@
 """
 Actual job definition, preferably based on abstract class from sparkutil
 """
+from typing import Union
+from pathlib import Path
+
+from pyspark.sql.session import SparkSession
 
 from src.sparkutil import ETL, ETLJob, trim_df
 
@@ -20,7 +24,7 @@ class ETLExecutor:
 
 
 class OryxLossesItem(ETL):
-    def __init__(self, source, spark):
+    def __init__(self, source: Union, spark: SparkSession):
         super().__init__(source, spark)
 
     def extract(self):
@@ -73,7 +77,7 @@ class OryxLossesItem(ETL):
 
 
 class OryxLossesProofs(ETL):
-    def __init__(self, source, spark):
+    def __init__(self, source: Union[Path, str], spark: SparkSession):
         super().__init__(source, spark)
 
     def extract(self):
