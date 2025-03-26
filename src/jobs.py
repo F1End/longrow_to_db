@@ -5,6 +5,7 @@ from typing import Union
 from pathlib import Path
 
 from pyspark.sql.session import SparkSession
+from pyspark.sql.functions import regexp_extract
 
 from src.sparkutil import ETL, ETLJob, trim_df
 
@@ -95,5 +96,35 @@ class OryxLossesProofs(ETL):
 
 
 class OryxLossesSummary(ETL):
-    def __init__(self):
-        raise NotImplemented
+    def __init__(self, source: Union[Path, str], spark: SparkSession):
+        super.__init__(source, spark)
+
+    def extract(self):
+        self.data = spark.read.option("header", "true").option("inferSchema", "true").csv(self.source)
+
+    def transform(self):
+        self._filter_base_cols()
+
+    def load(self, path: Union[Path, str]):
+        self.data.write.option("header", True).mode("overwrite").csv(path)
+
+    def _filter_base_cols(self):
+        self.data = self.data.select("category_counter", "category_name", "category_summary").distinct()
+
+    def _extract_data(self):
+        self.data = (self.data
+                     .withColumn("destroyed", regexp_extract(cat_df["category_summary"], r"destroyed:\s*(\d+)", 1)
+                                 .cast("int"))
+                     .withColumn("damaged", regexp_extract(cat_df["category_summary"], r"damaged:\s*(\d+)", 1)
+                                 .cast("int"))
+                     .withColumn("abandoned", regexp_extract(cat_df["category_summary"], r"abandoned:\s*(\d+)", 1)
+                                 .cast("int"))
+                     .withColumn("captured", regexp_extract(cat_df["category_summary"], r"captured:\s*(\d+)", 1)
+                                 .cast("int"))
+                     .withColumn("total", regexp_extract(cat_df["category_summary"], r"(\d+),", 1)
+                                 .cast("int"))
+                     )
+
+    def _filter_final_cols(self):
+        self.data = self.data.select("category_counter", "category_name", "destroyed",
+                                     "damaged", "abandoned", "captured", "total")
