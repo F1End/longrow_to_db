@@ -5,11 +5,11 @@ from typing import Union
 from pathlib import Path
 
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import regexp_extract
+from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode
 
 from src.sparkutil import ETL, ETLJob, trim_df
 
-ETLJOBS = [OryxLossesItem, OryxLossesProofs, OryxLossesSummary]
+# ETLJOBS = [OryxLossesItem, OryxLossesProofs, OryxLossesSummary]
 
 
 # etl executor
@@ -29,7 +29,7 @@ class OryxLossesItem(ETL):
         super().__init__(source, spark)
 
     def extract(self):
-        self.data = spark.read.option("header", "true").option("inferSchema", "true").csv(self.source)
+        self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
         self._trim_df()
@@ -46,15 +46,15 @@ class OryxLossesItem(ETL):
         self.data = trim_df(self.data)
 
     def _filter_base_cols(self):
-        self.data = self.data.select("category_name", "type_name", "type_ttl_count", "loss_item")
+        self.data = self.data.select("category_name", "type_name", "type_ttl_count", "loss_item", "loss_proof")
 
     def _build_cleaned_items(self):
         """
         Moving descriptions with multiple losses into more processable, comma delimited text
         """
-        self.data = (self.data.withColumn("loss_item", regexp_replace(self.data["loss_item"], r"[()]", ""))
-                     .withColumn("cleaned_items", regexp_replace(self.data["loss_item"], "and", ","))
-                     .withColumn("cleaned_items", regexp_replace(self.data["cleaned_items"], r"\b(and)\b", "")))
+        self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
+                     .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
+                     .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
 
     def _split_to_losses(self):
         """
@@ -73,8 +73,7 @@ class OryxLossesItem(ETL):
                      .filter(col("loss_id").isNotNull()))
 
     def _filter_final_cols(self):
-        self.data = self.data.select("category_name", "type_name", "loss_item",
-                                     "cleaned_items", "loss_id", "loss_type")
+        self.data = self.data.select("category_name", "type_name", "loss_id", "loss_type", "loss_proof")
 
 
 class OryxLossesProofs(ETL):
@@ -82,7 +81,7 @@ class OryxLossesProofs(ETL):
         super().__init__(source, spark)
 
     def extract(self):
-        self.data = spark.read.option("header", "true").option("inferSchema", "true").csv(self.source)
+        self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
         self._trim_df()
@@ -97,15 +96,16 @@ class OryxLossesProofs(ETL):
 
 class OryxLossesSummary(ETL):
     def __init__(self, source: Union[Path, str], spark: SparkSession):
-        super.__init__(source, spark)
+        super().__init__(source, spark)
 
     def extract(self):
-        self.data = spark.read.option("header", "true").option("inferSchema", "true").csv(self.source)
+        self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
         self._filter_base_cols()
         self._extract_data()
         self._filter_final_cols()
+        self._fill_na_with_null()
 
     def load(self, path: Union[Path, str]):
         self.data.write.option("header", True).mode("overwrite").csv(path)
@@ -115,17 +115,21 @@ class OryxLossesSummary(ETL):
 
     def _extract_data(self):
         self.data = (self.data
-                     .withColumn("destroyed", regexp_extract(cat_df["category_summary"], r"destroyed:\s*(\d+)", 1)
+                     .withColumn("destroyed", regexp_extract(self.data["category_summary"], r"destroyed:\s*(\d+)", 1)
                                  .cast("int"))
-                     .withColumn("damaged", regexp_extract(cat_df["category_summary"], r"damaged:\s*(\d+)", 1)
+                     .withColumn("damaged", regexp_extract(self.data["category_summary"], r"damaged:\s*(\d+)", 1)
                                  .cast("int"))
-                     .withColumn("abandoned", regexp_extract(cat_df["category_summary"], r"abandoned:\s*(\d+)", 1)
+                     .withColumn("abandoned", regexp_extract(self.data["category_summary"], r"abandoned:\s*(\d+)", 1)
                                  .cast("int"))
-                     .withColumn("captured", regexp_extract(cat_df["category_summary"], r"captured:\s*(\d+)", 1)
+                     .withColumn("captured", regexp_extract(self.data["category_summary"], r"captured:\s*(\d+)", 1)
                                  .cast("int"))
-                     .withColumn("total", regexp_extract(cat_df["category_summary"], r"(\d+),", 1)
+                     .withColumn("total", regexp_extract(self.data["category_summary"], r"(\d+),", 1)
                                  .cast("int"))
                      )
+
+    def _fill_na_with_null(self):
+        self.data = self.data.fillna(0, subset=["destroyed", "damaged",
+                                                "abandoned", "captured"])
 
     def _filter_final_cols(self):
         self.data = self.data.select("category_counter", "category_name", "destroyed",

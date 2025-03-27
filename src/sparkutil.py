@@ -10,19 +10,23 @@ from pyspark.sql.functions import trim
 from pyspark.sql import dataframe
 
 
+config = {"spark.executor.memory": "1g",
+          "spark.driver.memory": "1g",
+          "spark.executor.cores": "2"}
+
 # class for holding/governing/getting Spark session
 def create_spark_session(appname: str, config: dict) -> SparkSession:
     builder = SparkSession.builder.appName(appname)
-    for key, value in configs.items():
+    for key, value in config.items():
         builder = builder.config(key, value)
 
     return builder.getOrCreate()
 
 # Abstract class for spark jobs to be implemented
 class ETL(ABC):
-    def __init__(self, source: Union[Path, str], sparks_session: SparkSession):
+    def __init__(self, source: Union[Path, str], spark_session: SparkSession):
         self.source = source
-        self.sparks_session = sparks_session
+        self.spark_session = spark_session
         self.data = None
 
     @abstractmethod
@@ -40,7 +44,7 @@ class ETL(ABC):
 
 # ETL job, including input and output
 class ETLJob:
-    def __init__(self, etl_logic: ETL, source: Union[Path, str], output: Union[Path, src], extra_args: dict):
+    def __init__(self, etl_logic: ETL, source: Union[Path, str], output: Union[Path, str], extra_args: dict):
         self.etl = etl_logic
         self.source = source
         self.output = output
@@ -53,5 +57,5 @@ def trim_df(spark_df: dataframe) -> dataframe:
     """
     Removing whitespace from start/end of all columns
     """
-    trimmed_df = spark_df.select([trim(sparkdf[col]).alias(col) for col in spark_df.columns])
+    trimmed_df = spark_df.select([trim(spark_df[col]).alias(col) for col in spark_df.columns])
     return trimmed_df
