@@ -24,7 +24,7 @@ def parse_args():
     return arguments
 
 
-def parse_yaml(yaml_path: Optional[Path, Union]) -> dict:
+def parse_yaml(yaml_path: Union[Path, str]) -> dict:
     with open(yaml_path, "r") as file:
         data = yaml.safe_load(file)
 
