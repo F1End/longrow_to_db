@@ -1,0 +1,33 @@
+# Basic config executable for processing both Russian and Ukrainian losses from Oryx, based on longrow input
+
+pipeline: "Oryx losses full default"
+tasks:
+  - class: OryxLossesSummary
+    datefromfile: True
+    out: summary
+    steps: etl
+    metadata:
+      generated:
+      - ruleset: Oryxloss
+        as_of: fromfile_date
+        conflict: fromfile_conflict
+        party: fromfile_party
+
+  - class: OryxLossesItem
+    out: item
+    steps: etl
+    metadata:
+      generated:
+      - ruleset: Oryxloss
+        as_of: fromfile_date
+        conflict: fromfile_conflict
+        party: fromfile_party
+
+  - class: OryxLossesProofs
+    out: proofs
+    steps: etl
+    metadata:
+      generated:
+        - ruleset: Oryxloss
+          as_of: fromfile_date
+          conflict: fromfile_conflict
