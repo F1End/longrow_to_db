@@ -59,3 +59,13 @@ def trim_df(spark_df: dataframe) -> dataframe:
     """
     trimmed_df = spark_df.select([trim(spark_df[col]).alias(col) for col in spark_df.columns])
     return trimmed_df
+
+def add_metadata(spark_df: dataframe, metadata: dict, leftside_insert: bool = False) -> dataframe:
+    for key, value in metadata.items():
+        spark_df = spark_df.withColumn(key, lit(value))
+    if leftside_insert:
+        new_col_order = list(metadata.keys()) + [col for col in spark_df.columns if col not in metadata]
+        spark_df = spark_df.select(*new_col_order)
+
+    return spark_df
+
