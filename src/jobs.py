@@ -7,26 +7,38 @@ from pathlib import Path
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode
 
-from src.sparkutil import ETL, ETLJob, trim_df
-
-# ETLJOBS = [OryxLossesItem, OryxLossesProofs, OryxLossesSummary]
+from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata
 
 
 # etl executor
 class ETLExecutor:
-    def __init__(self):
-        raise NotImplemented
+    def __init__(self, source: Union[Path, str], config: dict):
+        appname = "BaseETL"
+        self.source = source
+        self.config = config
+        self.spark = create_spark_session(appname=appname, )
+        print(f"Running pipeline'{self.config['pipeline']}'")
+        for task in self.config["tasks"]:
+            print(task)
 
-    # method to load ETL jobs
 
     # method to run single ETL job
+    def run_task(self, etl_class:ETL, logic: str):
+        etl = etl_class(self.source, self.spark)
+        if logic == "default":
+            etl.extract()
+            etl.transform()
+            etl.load()
 
-    # method to run all ETL jobs one after another
+    def run_all(self):
+        for task in self.config["tasks"]:
+            self.run_task(etl_class=task["etl"], steps=task["steps"])
 
 
 class OryxLossesItem(ETL):
-    def __init__(self, source: Union, spark: SparkSession):
+    def __init__(self, source: Union, spark: SparkSession, metadata: Optional[dict] = None):
         super().__init__(source, spark)
+        self.metadata = metadata
 
     def extract(self):
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
@@ -38,6 +50,8 @@ class OryxLossesItem(ETL):
         self._split_to_losses()
         self._split_loss_to_rows()
         self._filter_final_cols()
+        if self.metadata:
+            self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
         self.data.write.option("header", True).mode("overwrite").csv(path)
@@ -66,7 +80,7 @@ class OryxLossesItem(ETL):
     def _split_loss_to_rows(self):
         """
         Separating ids into multiple rows and removing
-        remaining invalid rows (removing those without integer id)
+        leftover invalid rows (removing those without integer id)
         """
         self.data = (self.data.withColumn("loss_id", explode(self.data["loss_id"]))
                      .withColumn("loss_id", col("loss_id").cast("int"))
@@ -77,8 +91,9 @@ class OryxLossesItem(ETL):
 
 
 class OryxLossesProofs(ETL):
-    def __init__(self, source: Union[Path, str], spark: SparkSession):
+    def __init__(self, source: Union[Path, str], spark: SparkSession, metadata: Optional = None):
         super().__init__(source, spark)
+        self.metadata = metadata
 
     def extract(self):
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
@@ -86,6 +101,8 @@ class OryxLossesProofs(ETL):
     def transform(self):
         self._trim_df()
         self.data = self.data.select("loss_proof").distinct()
+        if self.metadata:
+            self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
         self.data.write.option("header", True).mode("overwrite").csv(path)
@@ -95,8 +112,9 @@ class OryxLossesProofs(ETL):
 
 
 class OryxLossesSummary(ETL):
-    def __init__(self, source: Union[Path, str], spark: SparkSession):
+    def __init__(self, source: Union[Path, str], spark: SparkSession, metadata: Optional = None):
         super().__init__(source, spark)
+        self.metadata = metadata
 
     def extract(self):
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
@@ -106,6 +124,8 @@ class OryxLossesSummary(ETL):
         self._extract_data()
         self._filter_final_cols()
         self._fill_na_with_null()
+        if self.metadata:
+            self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
         self.data.write.option("header", True).mode("overwrite").csv(path)
@@ -134,3 +154,7 @@ class OryxLossesSummary(ETL):
     def _filter_final_cols(self):
         self.data = self.data.select("category_counter", "category_name", "destroyed",
                                      "damaged", "abandoned", "captured", "total")
+
+ETL = {"OryxLossesSummary": OryxLossesSummary,
+       "OryxLossesItem": OryxLossesItem,
+       "OryxLossesProofs": OryxLossesProofs}
