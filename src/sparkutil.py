@@ -2,27 +2,31 @@
 Spark specific utility and abstractions
 """
 from abc import ABC, abstractmethod
+import logging
 from typing import Union
 from pathlib import Path
 
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import trim
+from pyspark.sql.functions import trim, lit
 from pyspark.sql import dataframe
 
+
+logger = logging.getLogger(__name__)
 
 config = {"spark.executor.memory": "1g",
           "spark.driver.memory": "1g",
           "spark.executor.cores": "2"}
 
-# class for holding/governing/getting Spark session
+
 def create_spark_session(appname: str, config: dict) -> SparkSession:
+    logger.info(f"Creating spark from config {config}")
     builder = SparkSession.builder.appName(appname)
     for key, value in config.items():
         builder = builder.config(key, value)
 
     return builder.getOrCreate()
 
-# Abstract class for spark jobs to be implemented
+
 class ETL(ABC):
     def __init__(self, source: Union[Path, str], spark_session: SparkSession):
         self.source = source
@@ -60,7 +64,9 @@ def trim_df(spark_df: dataframe) -> dataframe:
     trimmed_df = spark_df.select([trim(spark_df[col]).alias(col) for col in spark_df.columns])
     return trimmed_df
 
+
 def add_metadata(spark_df: dataframe, metadata: dict, leftside_insert: bool = False) -> dataframe:
+    logger.debug(f"Adding metadata {metadata} to {spark_df}")
     for key, value in metadata.items():
         spark_df = spark_df.withColumn(key, lit(value))
     if leftside_insert:
@@ -68,4 +74,3 @@ def add_metadata(spark_df: dataframe, metadata: dict, leftside_insert: bool = Fa
         spark_df = spark_df.select(*new_col_order)
 
     return spark_df
-
