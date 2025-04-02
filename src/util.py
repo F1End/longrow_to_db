@@ -3,8 +3,14 @@ Generic utility
 """
 from pathlib import Path
 from typing import Union
+import re
+import logging
+from argparse import ArgumentParser, BooleanOptionalAction
 
 import yaml
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_args():
@@ -31,12 +37,11 @@ def parse_yaml(yaml_path: Union[Path, str]) -> dict:
     return data
 
 
-class metadata_generator:
-    def __init__(self):
-        patterns = []
-
-    def from_filename(self, file_path):
-        raise NotImplemented
-
-    def _parse_filename(self, file_path):
-        raise NotImplemented
+def init_logging(debug: bool = False):
+    level = logging.INFO if not debug else logging.DEBUG
+    logging.basicConfig(
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=level
+    )
+    # Setting logger for py4j due to flood during debug
+    logging.getLogger("py4j").setLevel(logging.WARNING)
