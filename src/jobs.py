@@ -1,38 +1,17 @@
 """
 Actual job definition, preferably based on abstract class from sparkutil
 """
-from typing import Union
+from typing import Union, Optional
 from pathlib import Path
+import logging
 
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode
 
 from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata
+from src.metadata import MetaGenerator
 
-
-# etl executor
-class ETLExecutor:
-    def __init__(self, source: Union[Path, str], config: dict):
-        appname = "BaseETL"
-        self.source = source
-        self.config = config
-        self.spark = create_spark_session(appname=appname, )
-        print(f"Running pipeline'{self.config['pipeline']}'")
-        for task in self.config["tasks"]:
-            print(task)
-
-
-    # method to run single ETL job
-    def run_task(self, etl_class:ETL, logic: str):
-        etl = etl_class(self.source, self.spark)
-        if logic == "default":
-            etl.extract()
-            etl.transform()
-            etl.load()
-
-    def run_all(self):
-        for task in self.config["tasks"]:
-            self.run_task(etl_class=task["etl"], steps=task["steps"])
+logger = logging.getLogger(__name__)
 
 
 class OryxLossesItem(ETL):
@@ -41,9 +20,11 @@ class OryxLossesItem(ETL):
         self.metadata = metadata
 
     def extract(self):
+        logger.info(f"Extracting data from {self.source}")
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
+        logger.debug("Running transformations...")
         self._trim_df()
         self._filter_base_cols()
         self._build_cleaned_items()
@@ -54,6 +35,7 @@ class OryxLossesItem(ETL):
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
+        logger.info(f"Saving data to {path}")
         self.data.write.option("header", True).mode("overwrite").csv(path)
 
     def _trim_df(self):
@@ -96,15 +78,18 @@ class OryxLossesProofs(ETL):
         self.metadata = metadata
 
     def extract(self):
+        logger.info(f"Extracting data from {self.source}")
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
+        logger.debug("Running transformations...")
         self._trim_df()
         self.data = self.data.select("loss_proof").distinct()
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
+        logger.info(f"Saving data to {path}")
         self.data.write.option("header", True).mode("overwrite").csv(path)
 
     def _trim_df(self):
@@ -117,9 +102,11 @@ class OryxLossesSummary(ETL):
         self.metadata = metadata
 
     def extract(self):
+        logger.info(f"Extracting data from {self.source}")
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
 
     def transform(self):
+        logger.debug("Running transformations...")
         self._filter_base_cols()
         self._extract_data()
         self._filter_final_cols()
@@ -128,6 +115,7 @@ class OryxLossesSummary(ETL):
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
     def load(self, path: Union[Path, str]):
+        logger.info(f"Saving data to {path}")
         self.data.write.option("header", True).mode("overwrite").csv(path)
 
     def _filter_base_cols(self):
@@ -155,6 +143,7 @@ class OryxLossesSummary(ETL):
         self.data = self.data.select("category_counter", "category_name", "destroyed",
                                      "damaged", "abandoned", "captured", "total")
 
-ETL = {"OryxLossesSummary": OryxLossesSummary,
-       "OryxLossesItem": OryxLossesItem,
-       "OryxLossesProofs": OryxLossesProofs}
+
+ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,
+              "OryxLossesItem": OryxLossesItem,
+              "OryxLossesProofs": OryxLossesProofs}
