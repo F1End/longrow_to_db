@@ -3,31 +3,45 @@
 pipeline: "Oryx losses full default"
 tasks:
   - class: OryxLossesSummary
-    datefromfile: True
     out: summary
     steps: etl
     metadata:
       generated:
-      - ruleset: Oryxloss
-        as_of: fromfile_date
-        conflict: fromfile_conflict
-        party: fromfile_party
+      - column: as_of
+        method: date_from_filename
+      - column: conflict
+        method: resolve_from_filename
+        args:
+          attack-on-europe: "Russo-Ukrainian War"
+      - column: party
+        method: resolve_from_filename
+        args:
+          attack-on-europe-documenting-equipment: "Russia"
+          attack-on-europe-documenting-ukrainian: "Ukraine"
 
   - class: OryxLossesItem
     out: item
     steps: etl
     metadata:
       generated:
-      - ruleset: Oryxloss
-        as_of: fromfile_date
-        conflict: fromfile_conflict
-        party: fromfile_party
+      - column: as_of
+        method: date_from_filename
+      - column: conflict
+        method: resolve_from_filename
+        args:
+          attack-on-europe: "Russo-Ukrainian War"
+      - column: party
+        method: resolve_from_filename
+        args:
+          attack-on-europe-documenting-equipment: "Russia"
+          attack-on-europe-documenting-ukrainian: "Ukraine"
 
   - class: OryxLossesProofs
     out: proofs
     steps: etl
     metadata:
       generated:
-        - ruleset: Oryxloss
-          as_of: fromfile_date
-          conflict: fromfile_conflict
+      - column: conflict
+        method: resolve_from_filename
+        args:
+          attack-on-europe: "Russo-Ukrainian War"
