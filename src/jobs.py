@@ -10,6 +10,7 @@ from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, ex
 
 from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata
 from src.metadata import MetaGenerator
+from src.db_tools import to_sqlite
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,8 @@ class OryxLossesProofs(ETL):
 
     def load(self, path: Union[Path, str]):
         logger.info(f"Saving data to {path}")
-        self.data.write.option("header", True).mode("overwrite").csv(path)
+        # self.data.write.option("header", True).mode("overwrite").csv(path)
+        self.data.write.csv(path, header=True, mode="overwrite")
 
     def _trim_df(self):
         self.data = trim_df(self.data)
@@ -117,6 +119,7 @@ class OryxLossesSummary(ETL):
     def load(self, path: Union[Path, str]):
         logger.info(f"Saving data to {path}")
         self.data.write.option("header", True).mode("overwrite").csv(path)
+        to_sqlite(self.data, "summary", "test_db_1.db")
 
     def _filter_base_cols(self):
         self.data = self.data.select("category_counter", "category_name", "category_summary").distinct()
@@ -140,7 +143,7 @@ class OryxLossesSummary(ETL):
                                                 "abandoned", "captured"])
 
     def _filter_final_cols(self):
-        self.data = self.data.select("category_counter", "category_name", "destroyed",
+        self.data = self.data.select("category_name", "destroyed",
                                      "damaged", "abandoned", "captured", "total")
 
 

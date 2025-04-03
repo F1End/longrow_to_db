@@ -21,6 +21,10 @@ def parse_args():
                         help="Yaml file for tasks to be executed")
     parser.add_argument("--data_file",
                         help="CSV file with processable data")
+    parser.add_argument("--db_path",
+                        help="Path to database for data storage/lookup")
+    parser.add_argument("--init_db",
+                        help="Yaml file for db/table config to be created (if does not exists already)")
     parser.add_argument("--debug", default=False,
                         action=BooleanOptionalAction,
                         help="Set logger level to debug")

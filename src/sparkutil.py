@@ -19,7 +19,7 @@ config = {"spark.executor.memory": "1g",
 
 
 def create_spark_session(appname: str, config: dict) -> SparkSession:
-    logger.info(f"Creating spark from config {config}")
+    logger.info(f"Creating spark session '{appname}' from config {config}")
     builder = SparkSession.builder.appName(appname)
     for key, value in config.items():
         builder = builder.config(key, value)
@@ -46,15 +46,13 @@ class ETL(ABC):
         pass
 
 
-# ETL job, including input and output
 class ETLJob:
+    # todo: implement this with yaml reader
     def __init__(self, etl_logic: ETL, source: Union[Path, str], output: Union[Path, str], extra_args: dict):
         self.etl = etl_logic
         self.source = source
         self.output = output
         self.args = extra_args
-
-# Input is spark session, data(frame?) and cols to keep/remove
 
 
 def trim_df(spark_df: dataframe) -> dataframe:
