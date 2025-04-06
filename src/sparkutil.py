@@ -3,7 +3,7 @@ Spark specific utility and abstractions
 """
 from abc import ABC, abstractmethod
 import logging
-from typing import Union
+from typing import Union, Optional
 from pathlib import Path
 
 from pyspark.sql.session import SparkSession
@@ -53,6 +53,20 @@ class ETLJob:
         self.source = source
         self.output = output
         self.args = extra_args
+
+
+def persist_data(self, out_path: Optional[Union[Path, str]]= None, db_table: Optional[str] = None):
+    if out_path:
+        logger.info(f"Saving data to {path}")
+        self.data.write.option("header", True).mode("overwrite").csv(path)
+
+    if db_table and not self.db:
+        raise Exception(f"Database table target provided but instance is without database connection!")
+
+    if db_table and self.db:
+        with self.db as db_connection:
+            logger.debug(f"Pushing data to table {db_table} in {self.db.db_path}")
+            db_connection.append_db(self.data, db_table)
 
 
 def trim_df(spark_df: dataframe) -> dataframe:

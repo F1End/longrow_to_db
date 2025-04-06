@@ -4,25 +4,32 @@ Actual job definition, preferably based on abstract class from sparkutil
 from typing import Union, Optional
 from pathlib import Path
 import logging
+from itertools import chain
 
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode
+from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode, udf, create_map, lit
+from pyspark.sql.types import IntegerType
 
-from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata
+from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata, persist_data
 from src.metadata import MetaGenerator
-from src.db_tools import to_sqlite
+from src.db_tools import to_sqlite, DBConn
 
 logger = logging.getLogger(__name__)
 
 
 class OryxLossesItem(ETL):
-    def __init__(self, source: Union, spark: SparkSession, metadata: Optional[dict] = None):
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 metadata: Optional = None, db_conn: Optional = None):
         super().__init__(source, spark)
         self.metadata = metadata
+        self.db = db_conn
+        self.proof_keys = {}
 
     def extract(self):
         logger.info(f"Extracting data from {self.source}")
         self.data = self.spark_session.read.option("header", "true").option("inferSchema", "true").csv(self.source)
+        if self.db:
+            self.proof_keys = self._get_proof_keys()
 
     def transform(self):
         logger.debug("Running transformations...")
@@ -34,10 +41,19 @@ class OryxLossesItem(ETL):
         self._filter_final_cols()
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
+        if self.proof_keys:
+            mapping = create_map([lit(v) for v in chain(*[(v, k) for k, v in self.proof_keys.items()])])
+            # self.data = self.data.withColumn("proof_id", self._udf_map_proof_to_key()(self.data["loss_proof"]))
+            self.data = self.data.withColumn("proof_id", mapping[col("loss_proof")])
 
-    def load(self, path: Union[Path, str]):
-        logger.info(f"Saving data to {path}")
-        self.data.write.option("header", True).mode("overwrite").csv(path)
+
+    # def load(self, path: Union[Path, str]):
+    #     logger.info(f"Saving data to {path}")
+    #     self.data.write.option("header", True).mode("overwrite").csv(path)
+    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+        print(f"Path is {path}")
+        self.data.write.option("header", True).mode("overwrite").csv("test_out_1")
+        # persist_data(self, out_path=path, db_table=table)
 
     def _trim_df(self):
         self.data = trim_df(self.data)
@@ -72,11 +88,26 @@ class OryxLossesItem(ETL):
     def _filter_final_cols(self):
         self.data = self.data.select("category_name", "type_name", "loss_id", "loss_type", "loss_proof")
 
+    def _get_proof_keys(self) -> dict:
+        with self.db as db_connection:
+            proofs_and_keys = db_connection.fetch_unique_data(self.data, "loss_proof", "proofs", "proof")
+        logger.debug(f"Fetched {len(proofs_and_keys)} proofs for look-up.")
+        proofs_and_keys = {proof: key for key, proof in proofs_and_keys}
+        return proofs_and_keys
+
+    def _udf_map_proof_to_key(self):
+        return udf(self._map_proof_to_key, IntegerType())
+
+    def _map_proof_to_key(self, proof):
+        return self.proof_keys[proof]
+
 
 class OryxLossesProofs(ETL):
-    def __init__(self, source: Union[Path, str], spark: SparkSession, metadata: Optional = None):
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 metadata: Optional = None, db_conn: Optional = None):
         super().__init__(source, spark)
         self.metadata = metadata
+        self.db = db_conn
 
     def extract(self):
         logger.info(f"Extracting data from {self.source}")
@@ -86,22 +117,27 @@ class OryxLossesProofs(ETL):
         logger.debug("Running transformations...")
         self._trim_df()
         self.data = self.data.select("loss_proof").distinct()
+        self.data = self.data.withColumnRenamed("loss_proof", "proof")
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
-    def load(self, path: Union[Path, str]):
-        logger.info(f"Saving data to {path}")
-        # self.data.write.option("header", True).mode("overwrite").csv(path)
-        self.data.write.csv(path, header=True, mode="overwrite")
+    # def load(self, path: Union[Path, str]):
+    #     logger.info(f"Saving data to {path}")
+    #     # self.data.write.option("header", True).mode("overwrite").csv(path)
+    #     self.data.write.csv(path, header=True, mode="overwrite")
+    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+        persist_data(self, out_path=path, db_table=table)
 
     def _trim_df(self):
         self.data = trim_df(self.data)
 
 
 class OryxLossesSummary(ETL):
-    def __init__(self, source: Union[Path, str], spark: SparkSession, metadata: Optional = None):
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 metadata: Optional = None, db_conn: Optional = None):
         super().__init__(source, spark)
         self.metadata = metadata
+        self.db = db_conn
 
     def extract(self):
         logger.info(f"Extracting data from {self.source}")
@@ -116,10 +152,21 @@ class OryxLossesSummary(ETL):
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
-    def load(self, path: Union[Path, str]):
-        logger.info(f"Saving data to {path}")
-        self.data.write.option("header", True).mode("overwrite").csv(path)
-        to_sqlite(self.data, "summary", "test_db_1.db")
+    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+        persist_data(self, out_path=path, db_table=table)
+        # if path:
+        #     logger.info(f"Saving data to {path}")
+        #     self.data.write.option("header", True).mode("overwrite").csv(path)
+        #
+        # if table:
+        # if self.db:
+        #     with self.db as db_connection:
+        #         db_connection.append_db(self.data, )
+        # to_sqlite(self.data, "summary", "test_db_1.db")
+        # testdb = DBConn("test_db_2.db")
+        # with testdb as testconn:
+        #     testconn.append_db(self.data, "summary")
+
 
     def _filter_base_cols(self):
         self.data = self.data.select("category_counter", "category_name", "category_summary").distinct()
