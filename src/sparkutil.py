@@ -56,9 +56,10 @@ class ETLJob:
 
 
 def persist_data(self, out_path: Optional[Union[Path, str]]= None, db_table: Optional[str] = None):
+    out_path = str(out_path)
     if out_path:
-        logger.info(f"Saving data to {path}")
-        self.data.write.option("header", True).mode("overwrite").csv(path)
+        logger.info(f"Saving data to {out_path}")
+        self.data.write.option("header", True).mode("overwrite").csv(out_path)
 
     if db_table and not self.db:
         raise Exception(f"Database table target provided but instance is without database connection!")

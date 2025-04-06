@@ -42,18 +42,13 @@ class OryxLossesItem(ETL):
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
         if self.proof_keys:
-            mapping = create_map([lit(v) for v in chain(*[(v, k) for k, v in self.proof_keys.items()])])
-            # self.data = self.data.withColumn("proof_id", self._udf_map_proof_to_key()(self.data["loss_proof"]))
-            self.data = self.data.withColumn("proof_id", mapping[col("loss_proof")])
+            mapping = create_map([lit(x) for x in chain(*self.proof_keys.items())])
+            self.data = self.data.withColumn("proof_id", mapping[self.data["loss_proof"]])
+            self.data = self.data.drop("loss_proof")
 
 
-    # def load(self, path: Union[Path, str]):
-    #     logger.info(f"Saving data to {path}")
-    #     self.data.write.option("header", True).mode("overwrite").csv(path)
     def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
-        print(f"Path is {path}")
-        self.data.write.option("header", True).mode("overwrite").csv("test_out_1")
-        # persist_data(self, out_path=path, db_table=table)
+        persist_data(self, out_path=path, db_table=table)
 
     def _trim_df(self):
         self.data = trim_df(self.data)
@@ -95,12 +90,6 @@ class OryxLossesItem(ETL):
         proofs_and_keys = {proof: key for key, proof in proofs_and_keys}
         return proofs_and_keys
 
-    def _udf_map_proof_to_key(self):
-        return udf(self._map_proof_to_key, IntegerType())
-
-    def _map_proof_to_key(self, proof):
-        return self.proof_keys[proof]
-
 
 class OryxLossesProofs(ETL):
     def __init__(self, source: Union[Path, str], spark: SparkSession,
@@ -119,12 +108,8 @@ class OryxLossesProofs(ETL):
         self.data = self.data.select("loss_proof").distinct()
         self.data = self.data.withColumnRenamed("loss_proof", "proof")
         if self.metadata:
-            self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
+            pass
 
-    # def load(self, path: Union[Path, str]):
-    #     logger.info(f"Saving data to {path}")
-    #     # self.data.write.option("header", True).mode("overwrite").csv(path)
-    #     self.data.write.csv(path, header=True, mode="overwrite")
     def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
         persist_data(self, out_path=path, db_table=table)
 
@@ -154,18 +139,6 @@ class OryxLossesSummary(ETL):
 
     def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
         persist_data(self, out_path=path, db_table=table)
-        # if path:
-        #     logger.info(f"Saving data to {path}")
-        #     self.data.write.option("header", True).mode("overwrite").csv(path)
-        #
-        # if table:
-        # if self.db:
-        #     with self.db as db_connection:
-        #         db_connection.append_db(self.data, )
-        # to_sqlite(self.data, "summary", "test_db_1.db")
-        # testdb = DBConn("test_db_2.db")
-        # with testdb as testconn:
-        #     testconn.append_db(self.data, "summary")
 
 
     def _filter_base_cols(self):

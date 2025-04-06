@@ -44,6 +44,8 @@ tables:
         type: TEXT
       loss_id:
         type: INTEGER
+      loss_type:
+        type: TEXT
       proof_id:
         type: INTEGER
     foreign_keys:
