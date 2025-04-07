@@ -12,7 +12,8 @@ from pyspark.sql.types import IntegerType
 
 from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata, persist_data
 from src.metadata import MetaGenerator
-from src.db_tools import to_sqlite, DBConn
+from src.db_tools import DBConn
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +43,9 @@ class OryxLossesItem(ETL):
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
         if self.proof_keys:
-            mapping = create_map([lit(x) for x in chain(*self.proof_keys.items())])
-            self.data = self.data.withColumn("proof_id", mapping[self.data["loss_proof"]])
-            self.data = self.data.drop("loss_proof")
+            self._replace_url_with_keys()
 
-
-    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
         persist_data(self, out_path=path, db_table=table)
 
     def _trim_df(self):
@@ -90,6 +88,11 @@ class OryxLossesItem(ETL):
         proofs_and_keys = {proof: key for key, proof in proofs_and_keys}
         return proofs_and_keys
 
+    def _replace_url_with_keys(self):
+        mapping = create_map([lit(x) for x in chain(*self.proof_keys.items())])
+        self.data = self.data.withColumn("proof_id", mapping[self.data["loss_proof"]])
+        self.data = self.data.drop("loss_proof")
+
 
 class OryxLossesProofs(ETL):
     def __init__(self, source: Union[Path, str], spark: SparkSession,
@@ -110,7 +113,7 @@ class OryxLossesProofs(ETL):
         if self.metadata:
             pass
 
-    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
         persist_data(self, out_path=path, db_table=table)
 
     def _trim_df(self):
@@ -137,9 +140,8 @@ class OryxLossesSummary(ETL):
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
 
-    def load(self, path: Optional[Union[Path, str]]= None, table: Optional[str] = None):
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
         persist_data(self, out_path=path, db_table=table)
-
 
     def _filter_base_cols(self):
         self.data = self.data.select("category_counter", "category_name", "category_summary").distinct()

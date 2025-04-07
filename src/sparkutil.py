@@ -46,16 +46,7 @@ class ETL(ABC):
         pass
 
 
-class ETLJob:
-    # todo: implement this with yaml reader
-    def __init__(self, etl_logic: ETL, source: Union[Path, str], output: Union[Path, str], extra_args: dict):
-        self.etl = etl_logic
-        self.source = source
-        self.output = output
-        self.args = extra_args
-
-
-def persist_data(self, out_path: Optional[Union[Path, str]]= None, db_table: Optional[str] = None):
+def persist_data(self, out_path: Optional[Union[Path, str]] = None, db_table: Optional[str] = None):
     out_path = str(out_path)
     if out_path:
         logger.info(f"Saving data to {out_path}")

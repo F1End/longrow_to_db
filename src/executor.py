@@ -42,7 +42,6 @@ class ETLExecutor:
 
         logger.info("ETL runs completed!")
 
-    # method to run single ETL job
     def run_task(self, etl_class: ETL, logic: str,
                  out_dir: Optional[Union[Path, str]] = None,
                  metadata: Optional[dict] = None,

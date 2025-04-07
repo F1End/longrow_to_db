@@ -18,6 +18,8 @@ def parse_args():
     parser = ArgumentParser(description="Longrow csv parser")
     parser.add_argument("--base_config", default="./config/default_config.yaml",
                         help="Yaml file for base Spark settings")
+    parser.add_argument("--base_config_key", default="test",
+                        help="Key for setting group in base config yaml file")
     parser.add_argument("--job_config",
                         help="Yaml file for tasks to be executed")
     parser.add_argument("--data_file",
