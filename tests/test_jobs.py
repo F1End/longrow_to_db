@@ -1,9 +1,19 @@
 import unittest
 
 
-class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)  # add assertion here
+class TestOryxLossesItem(unittest.TestCase):
+    def test_init(self):
+        pass
+
+
+class TestOryxLossesProofs(unittest.TestCase):
+    def test_init(self):
+        pass
+
+
+class TestOryxLossesSummary(unittest.TestCase):
+    def test_init(self):
+        pass
 
 
 if __name__ == '__main__':
