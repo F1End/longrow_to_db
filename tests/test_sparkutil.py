@@ -2,7 +2,7 @@ import unittest
 
 
 class TestFunctions(unittest.TestCase):
-    def test_create_spark_session:
+    def test_create_spark_session(self):
         pass
 
 
