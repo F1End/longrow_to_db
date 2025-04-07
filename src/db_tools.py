@@ -35,9 +35,13 @@ class DBConn:
     def run_query(self, sql_safe: str, data: Iterable) -> Any:
         logger.debug(f"Running query: {sql_safe}")
         logger.debug(f"Query items: {data}")
-        print(f"Len 1: {len(data)}")
         results = self.cursor.execute(sql_safe, data).fetchall()
         return results
+
+    def push_or_ignore(self, sql: str, data: Iterable ):
+        logger.debug(f"Running query: {sql}")
+        logger.debug(f"Query items: {data}")
+        self.conn.executemany(sql, data)
 
     def _simple_query(self, sql):
         logger.debug(f"Running query: {sql}")
@@ -46,8 +50,18 @@ class DBConn:
 
     def append_db(self, pyspark_df, table_name: str):
         pandas_df = pyspark_df.toPandas()
-        pandas_df.to_sql(table_name, self.conn, if_exists="append", index=False)
+        values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
+        sql = self._insert_or_ignore_sql(pandas_df, table_name)
+        self.push_or_ignore(sql, values)
         logger.info(f"Updated data in table {table_name} with {len(pandas_df)} items.")
+
+    def _insert_or_ignore_sql(self, pandas_df, table_name: str) -> str:
+        cols = list(pandas_df.columns)
+        placeholders = ",".join(["?"] * len(cols))
+        col_names = ", ".join(cols)
+        sql = f"INSERT OR IGNORE INTO {table_name} ({col_names}) VALUES ({placeholders})"
+        return sql
+
 
     def fetch_unique_data(self, spark_df, spark_df_col_nane, db_table_name, db_col_name):
         data_list = self._spark_col_to_list(spark_df, spark_df_col_nane)
