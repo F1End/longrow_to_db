@@ -8,7 +8,7 @@ import logging
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode
 
-from src.sparkutil import ETL, ETLJob, trim_df, create_spark_session, add_metadata
+from src.sparkutil import ETL, trim_df, create_spark_session, add_metadata
 from src.metadata import MetaGenerator
 from src.jobs import ETLCLASSES
 from src.db_tools import DBConn
