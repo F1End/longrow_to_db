@@ -38,7 +38,7 @@ class DBConn:
         results = self.cursor.execute(sql_safe, data).fetchall()
         return results
 
-    def push_or_ignore(self, sql: str, data: Iterable ):
+    def push_or_ignore(self, sql: str, data: Iterable):
         logger.debug(f"Running query: {sql}")
         logger.debug(f"Query items: {data}")
         self.conn.executemany(sql, data)
@@ -62,12 +62,11 @@ class DBConn:
         sql = f"INSERT OR IGNORE INTO {table_name} ({col_names}) VALUES ({placeholders})"
         return sql
 
-
     def fetch_unique_data(self, spark_df, spark_df_col_nane, db_table_name, db_col_name):
         data_list = self._spark_col_to_list(spark_df, spark_df_col_nane)
         placeholders = ",".join(["?"] * len(data_list))
         sql = f"SELECT * FROM {db_table_name} WHERE {db_col_name} in ({placeholders})"
-        print("Len of placeholders:")
+        logger.debug(f"Parsed item count: {len(placeholders)}")
         result = self.run_query(sql, data_list)
         return result
 
