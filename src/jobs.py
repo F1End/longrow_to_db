@@ -133,6 +133,7 @@ class OryxLossesSummary(ETL):
 
     def transform(self):
         logger.debug("Running transformations...")
+        self._trim_df()
         self._filter_base_cols()
         self._extract_data()
         self._filter_final_cols()
@@ -167,6 +168,9 @@ class OryxLossesSummary(ETL):
     def _filter_final_cols(self):
         self.data = self.data.select("category_name", "destroyed",
                                      "damaged", "abandoned", "captured", "total")
+
+    def _trim_df(self):
+        self.data = trim_df(self.data)
 
 
 ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,
