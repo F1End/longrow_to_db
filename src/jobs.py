@@ -39,6 +39,7 @@ class OryxLossesItem(ETL):
         self._build_cleaned_items()
         self._split_to_losses()
         self._split_loss_to_rows()
+        self._remove_surplus_loss_data()
         self._filter_final_cols()
         if self.metadata:
             self.data = add_metadata(self.data, self.metadata, leftside_insert=True)
@@ -59,6 +60,7 @@ class OryxLossesItem(ETL):
         Moving descriptions with multiple losses into more processable, comma delimited text
         """
         self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
+                     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
                      .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
                      .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
 
@@ -77,6 +79,10 @@ class OryxLossesItem(ETL):
         self.data = (self.data.withColumn("loss_id", explode(self.data["loss_id"]))
                      .withColumn("loss_id", col("loss_id").cast("int"))
                      .filter(col("loss_id").isNotNull()))
+
+    def _remove_surplus_loss_data(self):
+        # removing ship names and other leftover references left due to variance in input formatting
+        self.data = self.data.withColumn("loss_type", regexp_replace(col("loss_type"), r"'\s*[^']*?\s*'", ""))
 
     def _filter_final_cols(self):
         self.data = self.data.select("category_name", "type_name", "loss_id", "loss_type", "loss_proof")
