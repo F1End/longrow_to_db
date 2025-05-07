@@ -1,0 +1,75 @@
+tables:
+
+  summary:
+    columns:
+      as_of:
+        type: TEXT
+      conflict:
+        type: TEXT
+      party:
+        type: TEXT
+      category_name:
+        type: TEXT
+      destroyed:
+        type: INTEGER
+      damaged:
+        type: INTEGER
+      abandoned:
+        type: INTEGER
+      captured:
+        type: INTEGER
+      total:
+        type: INTEGER
+
+  proofs:
+    columns:
+      id:
+        type: INTEGER
+        auto_inc_primary_key: true
+      proof:
+        type: TEXT
+        unique: true
+
+  loss_item:
+    columns:
+      as_of:
+        type: TEXT
+      conflict:
+        type: TEXT
+      party:
+        type: TEXT
+      category_name:
+        type: TEXT
+      type_name:
+        type: TEXT
+      loss_id:
+        type: INTEGER
+      loss_type:
+        type: TEXT
+      proof_id:
+        type: INTEGER
+    foreign_keys:
+      - column: proof_id
+        references_table: proofs
+        references_column: id
+
+indexes:
+  idx_item_date:
+    table: loss_item
+    columns:
+      - as_of
+
+  idx_item_category:
+    table: loss_item
+    columns:
+      - category_name
+
+  idx_item_type:
+    table: loss_item
+    columns:
+      - type_name
+
+  idx_item_loss:
+    table: loss_item
+    columns:
+      - loss_type
