@@ -55,6 +55,9 @@ class DBConn:
         self.push_or_ignore(sql, values)
         logger.info(f"Updated data in table {table_name} with {len(pandas_df)} items.")
 
+    def roll_db_data(self, pyspark_df, table_name: str):
+        pass
+
     def _insert_or_ignore_sql(self, pandas_df, table_name: str) -> str:
         cols = list(pandas_df.columns)
         placeholders = ",".join(["?"] * len(cols))

@@ -9,6 +9,7 @@ from itertools import chain
 from pyspark.sql.session import SparkSession
 from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode, udf, create_map, lit
 from pyspark.sql.types import IntegerType
+from pyspark.sql import dataframe
 
 from src.sparkutil import ETL, trim_df, create_spark_session, add_metadata, persist_data
 from src.metadata import MetaGenerator
@@ -177,6 +178,62 @@ class OryxLossesSummary(ETL):
 
     def _trim_df(self):
         self.data = trim_df(self.data)
+
+
+class OryxLossesItemV2(OryxLossesItem):
+    """Enhanced version of OryxLossesItem that uses start_date and stop_date instead of as_of for record keeping.
+    As a result, db_conn is no longer optional here
+    Compares parsed data with db:
+    - removes old data by adding as_of as stop_date
+    - adds new values by insertion with as_of as start_date
+    - leaves other data unchanged
+    """
+
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 db_conn: Union[Path, str],
+                 metadata: Optional = None):
+        super().__init__(source, spark, metadata=metadata, db_conn=db_conn)
+
+    def extract(self):
+        super().extract()
+
+    def transform(self):
+        super().transform():qg
+        prior_data = self._get_prior_data()
+        self.data = self._rolling_update(prior_data)
+
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
+        persist_data(self, out_path=path, db_table=table)
+
+    def _get_prior_data(self) -> dict:
+        query = """SELECT * FROM loss_item
+                   WHERE start_date <= ?
+                   AND stop_date >= ?
+                """
+        as_of = self._get_as_of_date()
+        with self.db as db_connection:
+            prior_data = db_connection.run_query(query, [as_of, as_of])
+        logger.debug(f"Fetched {len(prior_data)} records active as of {as_of}")
+        return prior_data
+
+    def _get_as_of_date(self):
+        pass
+
+    def _remove_unchanged(self, prior_data: dataframe) -> dataframe:
+        pass
+
+    def _stop_old_data(self, prior_data: dataframe) -> dataframe:
+        pass
+
+    def _start_new(self, prior_data: dataframe) -> dataframe:
+        pass
+
+    def _rolling_update(self, prior_data: dataframe) -> dataframe:
+        rolling_data = self.data
+        rolling_data = self._remove_unchanged(prior_data)
+        rolling_data = self._stop_old_data(prior_data)
+        rolling_data = self._start_new(prior_data)
+        return rolling_data
 
 
 ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,

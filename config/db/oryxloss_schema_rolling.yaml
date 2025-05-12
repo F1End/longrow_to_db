@@ -2,7 +2,9 @@ tables:
 
   summary:
     columns:
-      as_of:
+      start_date:
+        type: TEXT
+      stop_date:
         type: TEXT
       conflict:
         type: TEXT
@@ -32,7 +34,9 @@ tables:
 
   loss_item:
     columns:
-      as_of:
+      start_date:
+        type: TEXT
+      stop_date:
         type: TEXT
       conflict:
         type: TEXT
@@ -54,10 +58,15 @@ tables:
         references_column: id
 
 indexes:
-  idx_item_date:
+  idx_item_start_date:
     table: loss_item
     columns:
-      - as_of
+      - start_date
+
+  idx_item_stop_date:
+    table: loss_item
+    columns:
+      - stop_date
 
   idx_item_category:
     table: loss_item
