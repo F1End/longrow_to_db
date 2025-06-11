@@ -198,7 +198,7 @@ class OryxLossesItemV2(OryxLossesItem):
         super().extract()
 
     def transform(self):
-        super().transform():qg
+        super().transform()
         prior_data = self._get_prior_data()
         self.data = self._rolling_update(prior_data)
 
@@ -238,4 +238,5 @@ class OryxLossesItemV2(OryxLossesItem):
 
 ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,
               "OryxLossesItem": OryxLossesItem,
-              "OryxLossesProofs": OryxLossesProofs}
+              "OryxLossesProofs": OryxLossesProofs,
+              "OryxLossesItemV2": OryxLossesItemV2}
