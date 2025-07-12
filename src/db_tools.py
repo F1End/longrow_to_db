@@ -38,17 +38,17 @@ class DBConn:
         results = self.cursor.execute(sql_safe, data).fetchall()
         return results
 
-    def push_or_ignore(self, sql: str, data: Iterable):
+    def push_or_ignore(self, sql: str, data: Iterable) -> None:
         logger.debug(f"Running query: {sql}")
         logger.debug(f"Query items: {data}")
         self.conn.executemany(sql, data)
 
-    def _simple_query(self, sql):
+    def _simple_query(self, sql) -> Any:
         logger.debug(f"Running query: {sql}")
         results = self.cursor.execute(sql)
         return results.fetchall()
 
-    def append_db(self, pyspark_df, table_name: str):
+    def append_db(self, pyspark_df, table_name: str) -> None:
         pandas_df = pyspark_df.toPandas()
         values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
         sql = self._insert_or_ignore_sql(pandas_df, table_name)
@@ -56,7 +56,19 @@ class DBConn:
         logger.info(f"Updated data in table {table_name} with {len(pandas_df)} items.")
 
     def roll_db_data(self, pyspark_df, table_name: str):
-        pass
+        pandas_df = pyspark_df.toPandas()
+
+    def append_db_scd_type_two(self, pyspark_df, table_name: str) -> None:
+        pandas_df = pyspark_df.toPandas()
+        values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
+        sql = self._insert_or_ignore_sql(pandas_df, table_name)
+
+    def _scd_type_two_query(self, pandas_df, table_name: str) -> None:
+        cols = list(pandas_df.columns)
+        placeholders = ",".join(["?"] * len(cols))
+        col_names = ", ".join(cols)
+        sql = f"INSERT OR IGNORE INTO {table_name} ({col_names}) VALUES ({placeholders})"
+        return sql
 
     def _insert_or_ignore_sql(self, pandas_df, table_name: str) -> str:
         cols = list(pandas_df.columns)
