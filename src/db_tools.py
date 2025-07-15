@@ -6,7 +6,9 @@ from pathlib import Path
 from collections.abc import Iterable
 import sqlite3
 import logging
+from datetime import date
 
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -58,17 +60,43 @@ class DBConn:
     def roll_db_data(self, pyspark_df, table_name: str):
         pandas_df = pyspark_df.toPandas()
 
-    def append_db_scd_type_two(self, pyspark_df, table_name: str) -> None:
+    def append_db_scd_type_two(self, pyspark_df, table_name: str, table_config: dict) -> None:
+        self._create_temp_table(table_name, table_config)
         pandas_df = pyspark_df.toPandas()
         values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
         sql = self._insert_or_ignore_sql(pandas_df, table_name)
 
-    def _scd_type_two_query(self, pandas_df, table_name: str) -> None:
+    def _scd_type_two_query(self, pandas_df, table_name: str, as_of: Union[str, date]) -> None:
         cols = list(pandas_df.columns)
         placeholders = ",".join(["?"] * len(cols))
         col_names = ", ".join(cols)
         sql = f"INSERT OR IGNORE INTO {table_name} ({col_names}) VALUES ({placeholders})"
         return sql
+
+    def _sql_update_removed_entry_end_date(self, pandas_df, table_name: str,
+                                       as_of: Union[str, date]) -> str:
+        cols = list(pandas_df.columns)
+        placeholders = ",".join(["?"] * len(cols))
+        col_names = ", ".join(cols)
+        sql = (f"UPDATE {table_name} SET end_date = ? WHERE end_date IS NULL"
+               f"AND start_date <= ?"
+               f"AND ")
+        filter = self._sql_column_filters(pandas_df, cols_to_exclude=["stop_date"])
+
+    def _create_temp_table(self, table_name, table_config):
+        logger.info(f"Creating TEMPORARY table temp_{table_name} if does not exist")
+        cmd = self._temp_table_cmd(table_name)
+        logger.debug(f"Running command:\n {cmd}")
+        self.cursor.execute(cmd)
+
+    def _sql_temp_tbl_scd_type_two_query(self, pandas_df, table_name: str, as_of: Union[str, date]) -> str:
+        pass
+
+    def _sql_column_filters(self, pandas_df: pd.DataFrame, cols_to_exclude: Iterable) -> pd.DataFrame:
+        cols = [col for col in list(pandas_df.columns) if col not in cols_to_exclude]
+        delimiter = " = ? AND "
+        sql_col_names = " = ? AND ".join(cols) + " = ?"
+        return sql_col_names
 
     def _insert_or_ignore_sql(self, pandas_df, table_name: str) -> str:
         cols = list(pandas_df.columns)
@@ -123,6 +151,15 @@ class DBConn:
         table_def = self._table_definition(table_config)
         cmd = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(table_def)})"
         return cmd
+
+    def _temp_table_cmd(self, table_name, convert_scd: Optional[bool] = True) -> str:
+        tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = '?';"""
+        origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])
+        temp_tbl_cmd = origin_tbl_cmd.replace("CREATE TABLE ", "CREATE TEMP TABLE temp_")
+        if convert_scd:
+            temp_tbl_cmd.replace("start_date", "as_of")
+            temp_tbl_cmd.replace("end_date TEXT", "")
+        return temp_tbl_cmd
 
     def _table_definition(self, table_config: dict) -> list:
         columns = self._col_definitions(table_config)

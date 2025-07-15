@@ -30,8 +30,11 @@ class TestDBConn(TestCase):
         fake_pandas_df = pd.DataFrame(test_data)
         print(fake_pandas_df.to_string())
 
-        sql = self.dbconn._scd_type_two_query(fake_pandas_df, "my_table")
+        sql = self.dbconn._scd_type_two_query(fake_pandas_df, "my_table", "2025-07-04")
         print(sql)
+
+        sql2 = self.dbconn._sql_column_filters(fake_pandas_df, ["stop_date"])
+        print(sql2)
 
 
 
