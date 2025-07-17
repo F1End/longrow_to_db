@@ -61,33 +61,34 @@ class DBConn:
         pandas_df = pyspark_df.toPandas()
 
     def append_db_scd_type_two(self, pyspark_df, table_name: str, table_config: dict) -> None:
-        self._create_temp_table(table_name, table_config)
-        pandas_df = pyspark_df.toPandas()
-        values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
-        sql = self._insert_or_ignore_sql(pandas_df, table_name)
+        temp_table_name = self._create_temp_table(table_name, table_config)
+        self.append_db(pyspark_df, temp_table_name)
+        sql = self._scd_type_two_query(table_name, temp_table_name, pyspark_df.columns)
 
-    def _scd_type_two_query(self, pandas_df, table_name: str, as_of: Union[str, date]) -> None:
-        cols = list(pandas_df.columns)
-        placeholders = ",".join(["?"] * len(cols))
-        col_names = ", ".join(cols)
-        sql = f"INSERT OR IGNORE INTO {table_name} ({col_names}) VALUES ({placeholders})"
+    def _scd_type_two_query(self, table_name: str, temp_table_name: str, columns: list[str],
+                            as_of: Union[str, date]) -> None:
+        sql = (self._sql_scd_close_outdated(table_name, temp_table_name, columns) +
+               self._sql_scd_insert_new(table_name, temp_table_name, columns)
+               )
         return sql
 
-    def _sql_update_removed_entry_end_date(self, pandas_df, table_name: str,
-                                       as_of: Union[str, date]) -> str:
-        cols = list(pandas_df.columns)
-        placeholders = ",".join(["?"] * len(cols))
-        col_names = ", ".join(cols)
-        sql = (f"UPDATE {table_name} SET end_date = ? WHERE end_date IS NULL"
-               f"AND start_date <= ?"
-               f"AND ")
-        filter = self._sql_column_filters(pandas_df, cols_to_exclude=["stop_date"])
+    def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
+        sql = f"""
+        """
+        return sql
 
-    def _create_temp_table(self, table_name, table_config):
-        logger.info(f"Creating TEMPORARY table temp_{table_name} if does not exist")
+    def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
+        sql = f"""
+        """
+        return sql
+
+    def _create_temp_table(self, table_name, table_config) -> str:
+        table_name = "temp_" + table_name
+        logger.info(f"Creating TEMPORARY table {table_name} if does not exist")
         cmd = self._temp_table_cmd(table_name)
         logger.debug(f"Running command:\n {cmd}")
         self.cursor.execute(cmd)
+        return table_name
 
     def _sql_temp_tbl_scd_type_two_query(self, pandas_df, table_name: str, as_of: Union[str, date]) -> str:
         pass
