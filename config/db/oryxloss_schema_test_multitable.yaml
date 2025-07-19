@@ -2,6 +2,27 @@ tables:
 
   summary:
     columns:
+      as_of:
+        type: TEXT
+      conflict:
+        type: TEXT
+      party:
+        type: TEXT
+      category_name:
+        type: TEXT
+      destroyed:
+        type: INTEGER
+      damaged:
+        type: INTEGER
+      abandoned:
+        type: INTEGER
+      captured:
+        type: INTEGER
+      total:
+        type: INTEGER
+
+  summary_2:
+    columns:
       start_date:
         type: TEXT
       stop_date:
