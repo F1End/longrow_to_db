@@ -37,7 +37,7 @@ class DBConn:
     def run_query(self, sql_safe: str, data: Iterable) -> Any:
         logger.debug(f"Running query: {sql_safe}")
         logger.debug(f"Query items: {data}")
-        results = self.cursor.execute(sql_safe, data).fetchall()
+        results = self.conn.execute(sql_safe, data).fetchall()
         return results
 
     def push_or_ignore(self, sql: str, data: Iterable) -> None:
@@ -74,17 +74,44 @@ class DBConn:
 
     def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
         sql = f"""
+        SELECT * FROM loss_item_2 s2
+        WHERE NOT EXISTS (
+        SELECT 1
+        FROM loss_item s1
+        WHERE s1.conflict = s2.conflict
+        AND s1.party = s2.party
+        AND s1.category_name = S2.category_name
+        AND s1.type_name = s2.type_name
+        AND s1.loss_id = s2.loss_id
+        AND s1.loss_type = s2.loss_type
+        AND s1.proof_id = s2.proof_id
+        )
         """
         return sql
 
     def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
         sql = f"""
+        INSERT INTO ?
+        SELECT as_of as start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
+        s1.type_name, s1.loss_id, s1.loss_type, s1.proof_id 
+        FROM ? s1
+        WHERE NOT EXISTS (
+        SELECT 1
+        FROM ? s2
+        WHERE s1.conflict = s2.conflict
+        AND s1.party = s2.party
+        AND s1.category_name = S2.category_name
+        AND s1.type_name = s2.type_name
+        AND s1.loss_id = s2.loss_id
+        AND s1.loss_type = s2.loss_type
+        )
         """
-        return sql
+        arguments = [table_name, temp_table_name, table_name]
+        return sql, arguments
 
-    def _create_temp_table(self, table_name, table_config) -> str:
-        table_name = "temp_" + table_name
-        logger.info(f"Creating TEMPORARY table {table_name} if does not exist")
+    def _create_temp_table(self, table_name) -> str:
+        temp_table_name = "temp_" + table_name
+        logger.info(f"Creating TEMPORARY table {temp_table_name} if does not exist")
         cmd = self._temp_table_cmd(table_name)
         logger.debug(f"Running command:\n {cmd}")
         self.cursor.execute(cmd)
@@ -154,9 +181,9 @@ class DBConn:
         return cmd
 
     def _temp_table_cmd(self, table_name, convert_scd: Optional[bool] = True) -> str:
-        tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = '?';"""
-        origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])
-        temp_tbl_cmd = origin_tbl_cmd.replace("CREATE TABLE ", "CREATE TEMP TABLE temp_")
+        tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?;"""
+        origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])[0]
+        temp_tbl_cmd = origin_tbl_cmd[0].replace("CREATE TABLE ", "CREATE TEMP TABLE temp_")
         if convert_scd:
             temp_tbl_cmd.replace("start_date", "as_of")
             temp_tbl_cmd.replace("end_date TEXT", "")

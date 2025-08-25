@@ -4,11 +4,16 @@ import sqlite3
 from tempfile import mkdtemp
 import os
 from pathlib import Path
+import logging
 
 import pandas as pd
 import yaml
 
 from src import db_tools
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class TestIntegrationDBLocal(TestCase):
@@ -37,8 +42,6 @@ class TestIntegrationDBLocal(TestCase):
             col_defintions.append(col_sql)
         loss_tbl_sql = f"CREATE TABLE IF NOT EXISTS {self.tbl_name} ({', '.join(col_defintions)})"
 
-        print(loss_tbl_sql)
-
         # Creating table
         self.cursor.execute(loss_tbl_sql)
 
@@ -63,6 +66,38 @@ class TestIntegrationDBLocal(TestCase):
         query = f"PRAGMA table_info({self.tbl_name})"
         result = self.cursor.execute(query).fetchall()
         self.assertEqual(len(result), len(expected_columns))
+
+    def test_create_temp_table(self):
+        table_name = self.tbl_name
+        with db_tools.DBConn(self.dbpath) as conn:
+            conn._create_temp_table(table_name)
+
+            # Checking if table is empty
+            query_tbl = f"SELECT * FROM temp_{self.tbl_name}"
+            result = conn.cursor.execute(query_tbl).fetchall()
+            self.assertEqual(len(result), 0)
+
+            # Checking if columns are as expected
+            columns = [description[0] for description in conn.cursor.description] if conn.cursor.description else []
+            expected_columns = ['start_date', 'stop_date', 'conflict', 'party', 'category_name', 'type_name', 'loss_id', 'loss_type', 'proof_id']
+            self.assertEqual(columns, expected_columns)
+            query = f"PRAGMA table_info(temp_{self.tbl_name})"
+            result = conn.cursor.execute(query).fetchall()
+            self.assertEqual(len(result), len(expected_columns))
+
+    # Testing appending data to temp_table
+    def test_append_db_AND_create_temp_table(self):
+        data_path = Path("resource") / Path("loss_input_1.csv")
+        with open(data_path) as f:
+            data = pd.read_csv(f)
+        sparkdf_mock = MagicMock()
+        sparkdf_mock.toPandas.return_value = data
+        print(data.to_string())
+
+
+
+
+
 
 
 # class TestDBConn(TestCase):
