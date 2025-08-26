@@ -85,18 +85,46 @@ class TestIntegrationDBLocal(TestCase):
             result = conn.cursor.execute(query).fetchall()
             self.assertEqual(len(result), len(expected_columns))
 
-    # Testing appending data to temp_table
-    def test_append_db_AND_create_temp_table(self):
+    def test_format_df_for_temp_storage(self):
         data_path = Path("resource") / Path("loss_input_1.csv")
         with open(data_path) as f:
             data = pd.read_csv(f)
         sparkdf_mock = MagicMock()
         sparkdf_mock.toPandas.return_value = data
-        print(data.to_string())
+        expected_df = data.copy()
+        expected_df["start_date"] = expected_df["as_of"]
+        expected_df["stop_date"] = expected_df["as_of"]
+        expected_df = expected_df.drop("as_of", axis=1)
+        expected_df = expected_df[
+            ["start_date", "stop_date"] + [col for col in expected_df.columns if col not in ["start_date", "stop_date"]]]
+        with db_tools.DBConn(self.dbpath) as conn:
+            formatted_df = conn._format_df_for_temp_storage(sparkdf_mock)
+            pd.testing.assert_frame_equal(formatted_df, expected_df)
 
+    # Testing appending data to temp_table
+    def test_append_db_scd_type_two(self):
+        # Setting up data and mock
+        data_path = Path("resource") / Path("loss_input_1.csv")
+        with open(data_path) as f:
+            data = pd.read_csv(f)
+        sparkdf_mock = MagicMock()
+        sparkdf_mock.toPandas.return_value = data
+        table_name = self.tbl_name
 
+        # Calling functions
+        with db_tools.DBConn(self.dbpath) as conn:
+            conn.append_db_scd_type_two(sparkdf_mock, table_name)
 
-
+            # Checking if table has the data we wanted to push
+            query_tbl = f"SELECT * FROM temp_{self.tbl_name}"
+            result_df = pd.read_sql_query(query_tbl, conn.conn)
+            # result = conn.cursor.execute(query_tbl).fetchall()
+            self.assertEqual(len(result_df), len(data))
+            for col in result_df.columns:
+                if col in ["start_date", "stop_date"]:
+                    pd.testing.assert_series_equal(result_df[col], data["as_of"], check_names=False)
+                else:
+                    pd.testing.assert_series_equal(result_df[col], data[col], check_names=True)
 
 
 

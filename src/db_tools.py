@@ -9,6 +9,7 @@ import logging
 from datetime import date
 
 import pandas as pd
+from pyspark.sql import dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,13 @@ class DBConn:
         results = self.cursor.execute(sql)
         return results.fetchall()
 
-    def append_db(self, pyspark_df, table_name: str) -> None:
-        pandas_df = pyspark_df.toPandas()
+    def append_db(self, df, table_name: str) -> None:
+        if isinstance(df, dataframe.DataFrame):
+            pandas_df = df.toPandas()
+        elif isinstance(df, pd.DataFrame):
+            pandas_df = df
+        else:
+            raise TypeError("df must be DataFrame or Pandas DataFrame!")
         values = [tuple(row) for row in pandas_df.itertuples(index=False, name=None)]
         sql = self._insert_or_ignore_sql(pandas_df, table_name)
         self.push_or_ignore(sql, values)
@@ -60,10 +66,26 @@ class DBConn:
     def roll_db_data(self, pyspark_df, table_name: str):
         pandas_df = pyspark_df.toPandas()
 
-    def append_db_scd_type_two(self, pyspark_df, table_name: str, table_config: dict) -> None:
-        temp_table_name = self._create_temp_table(table_name, table_config)
-        self.append_db(pyspark_df, temp_table_name)
-        sql = self._scd_type_two_query(table_name, temp_table_name, pyspark_df.columns)
+    def append_db_scd_type_two(self, pyspark_df, table_name: str) -> None:
+        temp_table_name = self._create_temp_table(table_name)
+        temp_data = self._format_df_for_temp_storage(pyspark_df)
+        self.append_db(temp_data, temp_table_name)
+        # sql = self._scd_type_two_query(table_name, temp_table_name, pyspark_df.columns)
+
+    def _format_df_for_temp_storage(self, pyspark_df: dataframe) -> None:
+        pandas_df = pyspark_df.toPandas()
+        if "start_date" not in pandas_df.columns \
+        and "stop_date" not in pandas_df.columns \
+        and "as_of" in pandas_df.columns:
+            pandas_df["start_date"] = pandas_df["as_of"]
+            pandas_df["stop_date"] = pandas_df["as_of"]
+            pandas_df = pandas_df.drop("as_of", axis=1)
+            pandas_df = pandas_df[["start_date", "stop_date"] + [col for col in pandas_df.columns if col not in ["start_date","stop_date"]]]
+        else:
+            logger.warning("Skipping temp df formatting as it does not follow structure required for as_of -> start_date/stop_date conversion.")
+        return pandas_df
+
+
 
     def _scd_type_two_query(self, table_name: str, temp_table_name: str, columns: list[str],
                             as_of: Union[str, date]) -> None:
@@ -115,7 +137,7 @@ class DBConn:
         cmd = self._temp_table_cmd(table_name)
         logger.debug(f"Running command:\n {cmd}")
         self.cursor.execute(cmd)
-        return table_name
+        return temp_table_name
 
     def _sql_temp_tbl_scd_type_two_query(self, pandas_df, table_name: str, as_of: Union[str, date]) -> str:
         pass
