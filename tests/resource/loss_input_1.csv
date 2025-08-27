@@ -15,7 +15,7 @@ as_of,conflict,party,category_name,type_name,loss_id,loss_type,proof_id
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,6,destroyed,4624
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,7,destroyed,5030
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,8,destroyed,1861
-2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,9,destroyed,1437
+2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV !diff,9,destroyed,1437
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,6,damaged and abandoned,5125
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,7,damaged and abandoned,1039
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,8,damaged and abandoned,1333
@@ -23,7 +23,7 @@ as_of,conflict,party,category_name,type_name,loss_id,loss_type,proof_id
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,1,damaged and captured,5764
 2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,Unknown tank,1,destroyed,1684
 2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BMPT Azovets,1,captured,4674
-2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),1,destroyed,7168
+2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R) !diff,1,destroyed,7168
 2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),2,destroyed,3564
 2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),3,destroyed,6448
 2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),1,abandoned,2761

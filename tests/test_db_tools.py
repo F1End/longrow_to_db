@@ -21,7 +21,8 @@ class TestIntegrationDBLocal(TestCase):
         tempdir = mkdtemp()
         dbname = 'testdb'
         self.dbpath = Path(tempdir) / dbname
-        self.cursor = sqlite3.connect(self.dbpath).cursor()
+        self.conn = sqlite3.connect(self.dbpath)
+        self.cursor = self.conn.cursor()
         config_path = Path(__file__).parent.parent / 'config' / "db" / "oryxloss_schema_rolling.yaml"
         with open(config_path) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
@@ -45,6 +46,12 @@ class TestIntegrationDBLocal(TestCase):
         # Creating table
         self.cursor.execute(loss_tbl_sql)
 
+        # adding data
+        self.base_data_path = Path("resource") / Path("loss_input_2_basic_loss_item.csv")
+        with open(self.base_data_path) as f:
+            self.data = pd.read_csv(f)
+        self.data.to_sql(self.tbl_name, self.conn, if_exists="replace", index=False)
+
     def test_setup(self):
         # Query what tables are in database
         # If this fails, setup is not creating the expected table
@@ -57,7 +64,7 @@ class TestIntegrationDBLocal(TestCase):
         # Checking if table is empty
         query_tbl = "SELECT * FROM loss_item"
         result = self.cursor.execute(query_tbl).fetchall()
-        self.assertEqual(len(result), 0)
+        self.assertEqual(len(result), len(self.data))
 
         # Checking if columns are as expected
         columns = [description[0] for description in self.cursor.description] if self.cursor.description else []

@@ -1,0 +1,138 @@
+start_date,stop_date,conflict,party,category_name,type_name,loss_id,loss_type,proof_id
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M-55S,1,destroyed,1148
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M-55S,1,damaged,4142
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64A,1,destroyed,1149
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64A,1,captured,2650
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64B,1,destroyed,4182
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64B,2,destroyed,2794
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64B,1,captured,394
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64B,2,damaged and captured,5029
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,1,destroyed,4585
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,2,destroyed,4957
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,3,destroyed,4317
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,4,destroyed,3881
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,1,destroyed,4624
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,6,destroyed,4624
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,7,destroyed,5030
+2025-03-25,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV,8,destroyed,1861
+2025-03-31,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV !diff,9,destroyed,1437
+2025-03-15,2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV Zr. 2017 !diff,1,captured,7211
+2025-03-25,2025-03-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64BV Zr. 2017 !diff,2,captured,7211
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,6,damaged and abandoned,5125
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,7,damaged and abandoned,1039
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,8,damaged and abandoned,1333
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,9,abandoned,4551
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M1A1 SA Abrams,1,damaged and captured,5764
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,Unknown tank,1,destroyed,1684
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BMPT Azovets,1,captured,4674
+2025-03-31,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R)  !diff,1,destroyed,7168
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),2,destroyed,3564
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),3,destroyed,6448
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),1,abandoned,2761
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),2,abandoned,2761
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,AMX-10 RC(R),1,captured,4919
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRM-1(K) reconnaissance vehicle,1,destroyed,4964
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRM-1(K) reconnaissance vehicle,2,destroyed,4879
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRM-1(K) reconnaissance vehicle,3,destroyed,6984
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRM-1(K) reconnaissance vehicle,4,destroyed,4965
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRM-1(K) reconnaissance vehicle,5,destroyed,3766
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2,25,captured,4478
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2,26,captured,6235
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2,27,captured,1935
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2T(A),1,captured,5310
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2L1,1,destroyed,2142
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2L1,2,destroyed,4221
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2L1,3,destroyed,2259
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2L1,20,captured,5943
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2RKhb chemical reconnaissance vehicle,1,destroyed,6816
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,BRDM-2RKhb chemical reconnaissance vehicle,2,destroyed,1222
+2025-03-22,2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,MT-LB !diff,20,destroyed,2260
+2025-03-22,2025-03-31,Russo-Ukrainian_War,Ukraine,Armoured Fighting Vehicles,MT-LB !diff,21,destroyed,86
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,1,damaged and abandoned,3428
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,2,abandoned,5442
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,1,captured,6199
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,2,captured,5984
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,3,captured,4051
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,4,captured,3859
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,5,captured,1951
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,6,captured,4980
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,7,captured,6084
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles ,Roshel Senator MRAP,8,captured,576
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,1,destroyed,828
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,2,destroyed,1303
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,3,destroyed,3038
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,4,destroyed,1555
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,5,destroyed,4380
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,6,destroyed,1202
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,7,destroyed,4524
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,8,destroyed,7144
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,1,damaged,6825
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,1,captured,54
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,2,captured,3208
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,3,captured,2818
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,4,captured,758
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cobra,5,captured,4339
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,1,destroyed,4052
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,2,destroyed,1913
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,1,captured,7069
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,2,captured,1914
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,3,captured,3570
+2025-03-22,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Cougar,4,captured,6085
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,1,destroyed,5707
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,2,destroyed,4053
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,3,destroyed,3973
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,4,destroyed,5888
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,5,destroyed,2149
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,6,destroyed,2349
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,7,destroyed,1304
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,8,destroyed,1132
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,9,destroyed,759
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,1,damaged and abandoned,3546
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,1,captured,6533
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,2,damaged and captured,2452
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,Cougar H,3,captured,1915
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Spartan,1,destroyed,7186
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Spartan,2,destroyed,1916
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Infantry Mobility Vehicles,KrAZ Spartan,3,destroyed,483
+2025-02-28,2222-12-31,Russo-Ukrainian_War,Ukraine,Self-Propelled Artillery,Unknown SPG,10,destroyed,6176
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Self-Propelled Artillery,Unknown SPG,11,destroyed,6330
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Self-Propelled Artillery,Unknown SPG,12,destroyed,5330
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,5,destroyed,2821
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,6,destroyed,5681
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,7,destroyed,6257
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,8,destroyed,1463
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,9,destroyed,2896
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,10,destroyed,3649
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,11,destroyed,2391
+2025-03-15,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,12,destroyed,6802
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,13,destroyed,5989
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,1,destroyed,6803
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,15,destroyed,6803
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,16,destroyed,7154
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,17,destroyed,6935
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,18,destroyed,386
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,19,destroyed,4019
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Multiple Rocket Launchers,122mm BM-21 Grad,20,destroyed,3797
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,32,destroyed,3803
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,33,destroyed,5655
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,34,destroyed,1722
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,35,destroyed,4808
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,36,destroyed,4181
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,37,destroyed,2758
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,1,damaged,5996
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,2,damaged,3701
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,1,damaged and abandoned,2865
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,1,captured,3592
+2025-03-26,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-452 van,2,captured,500
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,1,destroyed,4216
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,2,destroyed,1965
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,3,destroyed,1399
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,4,destroyed,3880
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,5,destroyed,4031
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,6,destroyed,4362
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,7,destroyed,3804
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,8,destroyed,4665
+2025-03-29,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,1,damaged and abandoned,3128
+2025-03-30,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,2,damaged and abandoned,1147
+2025-03-30,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,1,captured,3189
+2025-03-30,2222-12-31,Russo-Ukrainian_War,Ukraine,"Trucks, Vehicles, and Jeeps",UAZ-469 jeep,2,captured,1285

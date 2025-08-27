@@ -131,7 +131,7 @@ class DBConn:
         arguments = [table_name, temp_table_name, table_name]
         return sql, arguments
 
-    def _create_temp_table(self, table_name) -> str:
+    def _create_temp_table(self, table_name: str) -> str:
         temp_table_name = "temp_" + table_name
         logger.info(f"Creating TEMPORARY table {temp_table_name} if does not exist")
         cmd = self._temp_table_cmd(table_name)
@@ -202,10 +202,15 @@ class DBConn:
         cmd = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(table_def)})"
         return cmd
 
-    def _temp_table_cmd(self, table_name, convert_scd: Optional[bool] = True) -> str:
+    def _temp_table_cmd(self, table_name, convert_scd: Optional[bool] = True,
+                        temp_tbl_name: Optional[str] = None) -> str:
         tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?;"""
         origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])[0]
-        temp_tbl_cmd = origin_tbl_cmd[0].replace("CREATE TABLE ", "CREATE TEMP TABLE temp_")
+        temp_tbl_cmd = origin_tbl_cmd[0].replace(f"CREATE TABLE ", "CREATE TEMP TABLE")
+        if temp_tbl_name:
+            temp_tbl_cmd = temp_tbl_cmd.replace(table_name, temp_tbl_name)
+        else:
+            temp_tbl_cmd = temp_tbl_cmd.replace(table_name, f"temp_{table_name}")
         if convert_scd:
             temp_tbl_cmd.replace("start_date", "as_of")
             temp_tbl_cmd.replace("end_date TEXT", "")
