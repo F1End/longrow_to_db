@@ -85,8 +85,6 @@ class DBConn:
             logger.warning("Skipping temp df formatting as it does not follow structure required for as_of -> start_date/stop_date conversion.")
         return pandas_df
 
-
-
     def _scd_type_two_query(self, table_name: str, temp_table_name: str, columns: list[str],
                             as_of: Union[str, date]) -> None:
         sql = (self._sql_scd_close_outdated(table_name, temp_table_name, columns) +
@@ -96,30 +94,31 @@ class DBConn:
 
     def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
         sql = f"""
-        SELECT * FROM loss_item_2 s2
+        UPDATE {table_name}
+        SET stop_date = ?
         WHERE NOT EXISTS (
         SELECT 1
-        FROM loss_item s1
-        WHERE s1.conflict = s2.conflict
-        AND s1.party = s2.party
-        AND s1.category_name = S2.category_name
-        AND s1.type_name = s2.type_name
-        AND s1.loss_id = s2.loss_id
-        AND s1.loss_type = s2.loss_type
-        AND s1.proof_id = s2.proof_id
+        FROM {temp_table_name} s1
+        WHERE s1.conflict = {table_name} .conflict
+        AND s1.party = {table_name} .party
+        AND s1.category_name = {table_name} .category_name
+        AND s1.type_name = {table_name} .type_name
+        AND s1.loss_id = {table_name} .loss_id
+        AND s1.loss_type = {table_name} .loss_type
+        AND s1.proof_id = {table_name} .proof_id
         )
         """
         return sql
 
     def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
         sql = f"""
-        INSERT INTO ?
-        SELECT as_of as start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
+        INSERT INTO {table_name}
+        SELECT start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
         s1.type_name, s1.loss_id, s1.loss_type, s1.proof_id 
-        FROM ? s1
+        FROM {temp_table_name} s1
         WHERE NOT EXISTS (
         SELECT 1
-        FROM ? s2
+        FROM {table_name} s2
         WHERE s1.conflict = s2.conflict
         AND s1.party = s2.party
         AND s1.category_name = S2.category_name
@@ -128,8 +127,8 @@ class DBConn:
         AND s1.loss_type = s2.loss_type
         )
         """
-        arguments = [table_name, temp_table_name, table_name]
-        return sql, arguments
+        # arguments = [table_name, temp_table_name, table_name]
+        return sql
 
     def _create_temp_table(self, table_name: str) -> str:
         temp_table_name = "temp_" + table_name

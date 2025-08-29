@@ -90,6 +90,7 @@ class TestIntegrationDBLocal(TestCase):
             self.assertEqual(columns, expected_columns)
             query = f"PRAGMA table_info(temp_{self.tbl_name})"
             result = conn.cursor.execute(query).fetchall()
+            # print(result)
             self.assertEqual(len(result), len(expected_columns))
 
     def test_format_df_for_temp_storage(self):
@@ -108,6 +109,11 @@ class TestIntegrationDBLocal(TestCase):
             formatted_df = conn._format_df_for_temp_storage(sparkdf_mock)
             pd.testing.assert_frame_equal(formatted_df, expected_df)
 
+    # def test__sql_scd_insert_new(self):
+    #     instance = db_tools.DBConn(self.dbpath)
+    #     sql = instance._sql_scd_insert_new(self.tbl_name, f"temp_{self.tbl_name}", [])
+    #     print(sql)
+
     # Testing appending data to temp_table
     def test_append_db_scd_type_two(self):
         # Setting up data and mock
@@ -117,6 +123,10 @@ class TestIntegrationDBLocal(TestCase):
         sparkdf_mock = MagicMock()
         sparkdf_mock.toPandas.return_value = data
         table_name = self.tbl_name
+
+        expected_data_path = Path("resource") / Path("loss_input_3_expected_loss_item.csv")
+        with open(expected_data_path) as f:
+            expected_df = pd.read_csv(f)
 
         # Calling functions
         with db_tools.DBConn(self.dbpath) as conn:
@@ -132,6 +142,24 @@ class TestIntegrationDBLocal(TestCase):
                     pd.testing.assert_series_equal(result_df[col], data["as_of"], check_names=False)
                 else:
                     pd.testing.assert_series_equal(result_df[col], data[col], check_names=True)
+
+            check_query = f"SELECT * FROM {self.tbl_name}"
+            result_df = pd.read_sql_query(check_query, conn.conn)
+
+            # update queries:
+            close_query = conn._sql_scd_close_outdated(self.tbl_name, f"temp_{self.tbl_name}", [table_name])
+            append_query = conn._sql_scd_insert_new(self.tbl_name, f"temp_{self.tbl_name}", [table_name])
+            conn.cursor.execute(close_query, ("2025-03-31",))
+            conn.cursor.execute(append_query)
+            conn.conn.commit()
+
+            check_query = f"SELECT * FROM {self.tbl_name}"
+            result_df = pd.read_sql_query(check_query, conn.conn)
+            result_df.reset_index(drop=True, inplace=True)
+            pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
+
+
+
 
 
 
