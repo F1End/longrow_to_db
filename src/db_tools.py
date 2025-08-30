@@ -35,11 +35,18 @@ class DBConn:
         self.conn.close()
         logger.debug(f"Closed connection to {self.db_path}")
 
-    def run_query(self, sql_safe: str, data: Iterable) -> Any:
+    def run_query(self, sql_safe: str, data: Optional[Iterable] = None, fetch: Optional[bool] = True) \
+            -> Union[Any, None]:
         logger.debug(f"Running query: {sql_safe}")
         logger.debug(f"Query items: {data}")
-        results = self.conn.execute(sql_safe, data).fetchall()
-        return results
+        if data:
+            load = self.cursor.execute(sql_safe, data)
+        else:
+            load = self.cursor.execute(sql_safe)
+        if fetch:
+            results = load.fetchall()
+            return results
+        return None
 
     def push_or_ignore(self, sql: str, data: Iterable) -> None:
         logger.debug(f"Running query: {sql}")
@@ -69,8 +76,11 @@ class DBConn:
     def append_db_scd_type_two(self, pyspark_df, table_name: str) -> None:
         temp_table_name = self._create_temp_table(table_name)
         temp_data = self._format_df_for_temp_storage(pyspark_df)
+        stop_date = temp_data["stop_date"].unique().tolist()
+        if len(stop_date) > 1:
+            raise ValueError(f"Stop date must be consistent, but multiple values present: {stop_date}")
         self.append_db(temp_data, temp_table_name)
-        # sql = self._scd_type_two_query(table_name, temp_table_name, pyspark_df.columns)
+        self._execute_scd_update(table_name, temp_table_name, stop_date[0])
 
     def _format_df_for_temp_storage(self, pyspark_df: dataframe) -> None:
         pandas_df = pyspark_df.toPandas()
@@ -85,32 +95,35 @@ class DBConn:
             logger.warning("Skipping temp df formatting as it does not follow structure required for as_of -> start_date/stop_date conversion.")
         return pandas_df
 
-    def _scd_type_two_query(self, table_name: str, temp_table_name: str, columns: list[str],
-                            as_of: Union[str, date]) -> None:
-        sql = (self._sql_scd_close_outdated(table_name, temp_table_name, columns) +
-               self._sql_scd_insert_new(table_name, temp_table_name, columns)
-               )
-        return sql
+    def _execute_scd_update(self, table_name: str, temp_table_name: str, stop_date: str):
+        col_filters = self._scd_column_filters(table_name, temp_table_name)
+        close_query = self._sql_scd_close_outdated(table_name, temp_table_name, col_filters)
+        append_query = self._sql_scd_insert_new(table_name, temp_table_name, col_filters)
+        self.run_query(close_query, [stop_date], fetch=False)
+        self.run_query(append_query, fetch=False)
 
-    def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
+    def _scd_column_filters(self, table_name, temp_table_name):
+        table_cols_query = f"PRAGMA table_info({table_name})"
+        table_cosl_result = self.cursor.execute(table_cols_query).fetchall()
+        cols_list = [col_data[1] for col_data in table_cosl_result if col_data[1] not in ["start_date", "stop_date", "as_of"]]
+        match_cols = [f"{temp_table_name}.{col_name} = {table_name}.{col_name}" for col_name in cols_list]
+        query_filters = " AND ".join(match_cols)
+        return query_filters
+
+
+    def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
         sql = f"""
         UPDATE {table_name}
         SET stop_date = ?
         WHERE NOT EXISTS (
         SELECT 1
-        FROM {temp_table_name} s1
-        WHERE s1.conflict = {table_name} .conflict
-        AND s1.party = {table_name} .party
-        AND s1.category_name = {table_name} .category_name
-        AND s1.type_name = {table_name} .type_name
-        AND s1.loss_id = {table_name} .loss_id
-        AND s1.loss_type = {table_name} .loss_type
-        AND s1.proof_id = {table_name} .proof_id
+        FROM {temp_table_name}
+        WHERE {sql_filter}
         )
         """
         return sql
 
-    def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, columns: list[str]) -> str:
+    def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
         sql = f"""
         INSERT INTO {table_name}
         SELECT start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
@@ -119,15 +132,9 @@ class DBConn:
         WHERE NOT EXISTS (
         SELECT 1
         FROM {table_name} s2
-        WHERE s1.conflict = s2.conflict
-        AND s1.party = s2.party
-        AND s1.category_name = S2.category_name
-        AND s1.type_name = s2.type_name
-        AND s1.loss_id = s2.loss_id
-        AND s1.loss_type = s2.loss_type
+        WHERE {sql_filter}
         )
-        """
-        # arguments = [table_name, temp_table_name, table_name]
+        """.replace("temp_loss_item.", "s1.").replace("loss_item.", "s2.")
         return sql
 
     def _create_temp_table(self, table_name: str) -> str:
@@ -143,7 +150,6 @@ class DBConn:
 
     def _sql_column_filters(self, pandas_df: pd.DataFrame, cols_to_exclude: Iterable) -> pd.DataFrame:
         cols = [col for col in list(pandas_df.columns) if col not in cols_to_exclude]
-        delimiter = " = ? AND "
         sql_col_names = " = ? AND ".join(cols) + " = ?"
         return sql_col_names
 
@@ -205,7 +211,7 @@ class DBConn:
                         temp_tbl_name: Optional[str] = None) -> str:
         tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?;"""
         origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])[0]
-        temp_tbl_cmd = origin_tbl_cmd[0].replace(f"CREATE TABLE ", "CREATE TEMP TABLE")
+        temp_tbl_cmd = origin_tbl_cmd[0].replace(f"CREATE TABLE ", "CREATE TEMP TABLE ")
         if temp_tbl_name:
             temp_tbl_cmd = temp_tbl_cmd.replace(table_name, temp_tbl_name)
         else:

@@ -18,6 +18,7 @@ logger.setLevel(logging.DEBUG)
 
 class TestIntegrationDBLocal(TestCase):
     def setUp(self):
+        # setup general permanent data table
         tempdir = mkdtemp()
         dbname = 'testdb'
         self.dbpath = Path(tempdir) / dbname
@@ -51,6 +52,18 @@ class TestIntegrationDBLocal(TestCase):
         with open(self.base_data_path) as f:
             self.data = pd.read_csv(f)
         self.data.to_sql(self.tbl_name, self.conn, if_exists="replace", index=False)
+
+
+        # reading in temp table data and saving as formatted version for simpler testing downstream
+        temp_data_path = Path("resource") / Path("loss_input_1.csv")
+        with open(temp_data_path) as f:
+            temp_data = pd.read_csv(f)
+        temp_data["start_date"] = temp_data["as_of"]
+        temp_data["stop_date"] = temp_data["as_of"]
+        temp_data = temp_data.drop("as_of", axis=1)
+        temp_data = temp_data[
+            ["start_date", "stop_date"] + [col for col in temp_data.columns if col not in ["start_date", "stop_date"]]]
+        self.temp_data = temp_data
 
     def test_setup(self):
         # Query what tables are in database
@@ -90,7 +103,6 @@ class TestIntegrationDBLocal(TestCase):
             self.assertEqual(columns, expected_columns)
             query = f"PRAGMA table_info(temp_{self.tbl_name})"
             result = conn.cursor.execute(query).fetchall()
-            # print(result)
             self.assertEqual(len(result), len(expected_columns))
 
     def test_format_df_for_temp_storage(self):
@@ -109,58 +121,103 @@ class TestIntegrationDBLocal(TestCase):
             formatted_df = conn._format_df_for_temp_storage(sparkdf_mock)
             pd.testing.assert_frame_equal(formatted_df, expected_df)
 
-    # def test__sql_scd_insert_new(self):
-    #     instance = db_tools.DBConn(self.dbpath)
-    #     sql = instance._sql_scd_insert_new(self.tbl_name, f"temp_{self.tbl_name}", [])
-    #     print(sql)
+    def test__sql_scd_insert_new(self):
+        sql_filters = """temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id"""
+        instance = db_tools.DBConn(self.dbpath)
+        sql = instance._sql_scd_insert_new(self.tbl_name, f"temp_{self.tbl_name}", sql_filters)
+        expected = """
+        INSERT INTO loss_item
+        SELECT start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
+        s1.type_name, s1.loss_id, s1.loss_type, s1.proof_id 
+        FROM temp_loss_item s1
+        WHERE NOT EXISTS (
+        SELECT 1
+        FROM loss_item s2
+        WHERE s1.conflict = s2.conflict AND s1.party = s2.party AND s1.category_name = s2.category_name AND s1.type_name = s2.type_name AND s1.loss_id = s2.loss_id AND s1.loss_type = s2.loss_type AND s1.proof_id = s2.proof_id
+        )
+        """
+        self.maxDiff = None
+        self.assertEqual(sql, expected)
+
+    def test__sql_scd_close_outdated(self):
+        sql_filters = """temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id"""
+        instance = db_tools.DBConn(self.dbpath)
+        sql = instance._sql_scd_close_outdated(self.tbl_name, f"temp_{self.tbl_name}", sql_filters)
+        expected = """
+        UPDATE loss_item
+        SET stop_date = ?
+        WHERE NOT EXISTS (
+        SELECT 1
+        FROM temp_loss_item
+        WHERE temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id
+        )
+        """
+        self.assertEqual(sql, expected)
+
+    def test_execute_scd_update(self):
+        table_name = self.tbl_name
+        temp_data = self.temp_data
+
+        expected_data_path = Path("resource") / Path("loss_input_3_expected_loss_item.csv")
+        with open(expected_data_path) as f:
+            expected_df = pd.read_csv(f)
+
+        temp_table_name = f"temp_{table_name}"
+        temp_tbl_sql = f"""CREATE TEMP TABLE "{temp_table_name}" (
+                          "start_date" TEXT,
+                          "stop_date" TEXT,
+                          "conflict" TEXT,
+                          "party" TEXT,
+                          "category_name" TEXT,
+                          "type_name" TEXT,
+                          "loss_id" INTEGER,
+                          "loss_type" TEXT,
+                          "proof_id" INTEGER
+                          )"""
+
+        # create connector (temp table exists only withint he same session)
+        with db_tools.DBConn(self.dbpath) as conn:
+            # create temp table and load data
+            conn.cursor.execute(temp_tbl_sql)
+            temp_data.to_sql(temp_table_name, conn.conn, if_exists="replace", index=False)
+
+            # test if temp loading was successfully
+            query_tbl = f"SELECT * FROM {temp_table_name}"
+            result_df = pd.read_sql_query(query_tbl, conn.conn)
+            self.assertEqual(len(result_df), len(temp_data))
+            pd.testing.assert_frame_equal(result_df, temp_data)
+
+            # The actual test
+            conn._execute_scd_update(table_name, temp_table_name, "2025-03-31")
+            updated_tbl_query = f"SELECT * FROM {table_name}"
+            result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
+            pd.testing.assert_frame_equal(result_final_df, expected_df)
 
     # Testing appending data to temp_table
     def test_append_db_scd_type_two(self):
-        # Setting up data and mock
-        data_path = Path("resource") / Path("loss_input_1.csv")
-        with open(data_path) as f:
-            data = pd.read_csv(f)
+        # Setting up data and mock to create temp table
         sparkdf_mock = MagicMock()
-        sparkdf_mock.toPandas.return_value = data
+        sparkdf_mock.toPandas.return_value = self.temp_data
         table_name = self.tbl_name
 
         expected_data_path = Path("resource") / Path("loss_input_3_expected_loss_item.csv")
         with open(expected_data_path) as f:
             expected_df = pd.read_csv(f)
 
-        # Calling functions
+        # create connector instance
         with db_tools.DBConn(self.dbpath) as conn:
+            # The actual test
             conn.append_db_scd_type_two(sparkdf_mock, table_name)
+            updated_tbl_query = f"SELECT * FROM {table_name}"
+            result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
+            pd.testing.assert_frame_equal(result_final_df, expected_df)
 
-            # Checking if table has the data we wanted to push
-            query_tbl = f"SELECT * FROM temp_{self.tbl_name}"
-            result_df = pd.read_sql_query(query_tbl, conn.conn)
-            # result = conn.cursor.execute(query_tbl).fetchall()
-            self.assertEqual(len(result_df), len(data))
-            for col in result_df.columns:
-                if col in ["start_date", "stop_date"]:
-                    pd.testing.assert_series_equal(result_df[col], data["as_of"], check_names=False)
-                else:
-                    pd.testing.assert_series_equal(result_df[col], data[col], check_names=True)
-
-            check_query = f"SELECT * FROM {self.tbl_name}"
-            result_df = pd.read_sql_query(check_query, conn.conn)
-
-            # update queries:
-            close_query = conn._sql_scd_close_outdated(self.tbl_name, f"temp_{self.tbl_name}", [table_name])
-            append_query = conn._sql_scd_insert_new(self.tbl_name, f"temp_{self.tbl_name}", [table_name])
-            conn.cursor.execute(close_query, ("2025-03-31",))
-            conn.cursor.execute(append_query)
-            conn.conn.commit()
-
-            check_query = f"SELECT * FROM {self.tbl_name}"
-            result_df = pd.read_sql_query(check_query, conn.conn)
-            result_df.reset_index(drop=True, inplace=True)
-            pd.testing.assert_frame_equal(result_df, expected_df, check_dtype=False)
-
-
-
-
+    def test__scd_column_filters(self):
+        with db_tools.DBConn(self.dbpath) as conn:
+            sql_filter = conn._scd_column_filters(table_name=self.tbl_name, temp_table_name="temp_loss_item")
+            expected_filter = """temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id"""
+            self.maxDiff = None
+            self.assertEqual(sql_filter, expected_filter)
 
 
 # class TestDBConn(TestCase):
