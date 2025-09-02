@@ -1,0 +1,23 @@
+start_date,stop_date,conflict,party,category_name,destroyed,damaged,abandoned,captured,total
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Unmanned Combat Aerial Vehicles,28,0,0,1,29
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Mine-Resistant Ambush Protected (MRAP) Vehicles,296,38,33,42,409
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Towed Artillery,135,75,3,18,231
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Naval Ships,14,8,0,19,41
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Multiple Rocket Launchers,54,17,0,9,80
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Reconnaissance Unmanned Aerial Vehicles,299,1,0,160,460
+2025-03-22,2222-12-31,Russo-Ukrainian War,Ukraine,Unmanned Ground Vehicles ,1,0,0,0,1
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,"Trucks, Vehicles, and Jeeps",828,31,16,190,1065
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Anti-Aircraft Guns,0,0,0,4,4
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Armoured Personnel Carriers,518,36,91,123,768
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Radars And Communications Equipment,100,21,1,14,136
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Tanks,759,79,84,140,1062
+2025-03-15,2222-12-31,Russo-Ukrainian War,Ukraine,Self-Propelled Artillery,363,73,0,24,460
+2025-03-15,2025-04-01,Russo-Ukrainian War,Ukraine,Infantry Fighting Vehicles,886,62,113,144,1205
+2025-03-22,2222-12-31,Russo-Ukrainian War,Ukraine,Aircraft,98,4,0,1,103
+2025-03-22,2222-12-31,Russo-Ukrainian War,Ukraine,Artillery Support Vehicles And Equipment,14,0,0,13,27
+2025-03-22,2222-12-31,Russo-Ukrainian War,Ukraine,Self-Propelled Anti-Tank Missile Systems,7,0,1,10,18
+2025-03-26,2222-12-31,Russo-Ukrainian War,Ukraine,Infantry Mobility Vehicles,495,42,47,142,726
+2025-03-26,2222-12-31,Russo-Ukrainian War,Ukraine,Armoured Fighting Vehicles,322,16,11,86,435
+2025-02-28,2222-12-31,Russo-Ukrainian War,Ukraine,Helicopters,44,3,0,3,50
+2025-04-01,2222-12-31,Russo-Ukrainian War,Ukraine,Infantry Fighting Vehicles,886,62,113,244,1305
+2025-04-01,2222-12-31,Russo-Ukrainian War,Ukraine,Walkers !diff,1,1,0,0,2

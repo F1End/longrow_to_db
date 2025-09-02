@@ -7,6 +7,7 @@ from collections.abc import Iterable
 import sqlite3
 import logging
 from datetime import date
+import re
 
 import pandas as pd
 from pyspark.sql import dataframe
@@ -124,17 +125,20 @@ class DBConn:
         return sql
 
     def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
+        col_names = re.findall(r'\.(\w+)(?=\s)', sql_filter)
+        col_names_no_duplicates = list(dict.fromkeys(col_names))
+        dynamic_col_names = ", ".join([f"s1.{col_name}" for col_name in col_names_no_duplicates])
+
         sql = f"""
         INSERT INTO {table_name}
-        SELECT start_date, "2222-12-31" as stop_date, s1.conflict, s1.party, s1.category_name,
-        s1.type_name, s1.loss_id, s1.loss_type, s1.proof_id 
+        SELECT start_date, "2222-12-31" as stop_date, {dynamic_col_names}
         FROM {temp_table_name} s1
         WHERE NOT EXISTS (
         SELECT 1
         FROM {table_name} s2
         WHERE {sql_filter}
         )
-        """.replace("temp_loss_item.", "s1.").replace("loss_item.", "s2.")
+        """.replace(f"{temp_table_name}.", "s1.").replace(f"{table_name}.", "s2.")
         return sql
 
     def _create_temp_table(self, table_name: str) -> str:
