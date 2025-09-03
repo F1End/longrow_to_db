@@ -60,6 +60,20 @@ def persist_data(self, out_path: Optional[Union[Path, str]] = None, db_table: Op
             logger.debug(f"Pushing data to table {db_table} in {self.db.db_path}")
             db_connection.append_db(self.data, db_table)
 
+def persist_data_scd2(self, out_path: Optional[Union[Path, str]] = None, db_table: Optional[str] = None):
+    out_path = str(out_path)
+    if out_path:
+        logger.info(f"Saving data to {out_path}")
+        self.data.write.option("header", True).mode("overwrite").csv(out_path)
+
+    if db_table and not self.db:
+        raise Exception(f"Database table target provided but instance is without database connection!")
+
+    if db_table and self.db:
+        with self.db as db_connection:
+            logger.debug(f"Pushing data to table {db_table} in {self.db.db_path}")
+            db_connection.append_db_scd_type_two(self.data, db_table)
+
 
 def trim_df(spark_df: dataframe) -> dataframe:
     """

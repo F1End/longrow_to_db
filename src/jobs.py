@@ -11,7 +11,7 @@ from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, ex
 from pyspark.sql.types import IntegerType
 from pyspark.sql import dataframe
 
-from src.sparkutil import ETL, trim_df, create_spark_session, add_metadata, persist_data
+from src.sparkutil import ETL, trim_df, create_spark_session, add_metadata, persist_data, persist_data_scd2
 from src.metadata import MetaGenerator
 from src.db_tools import DBConn
 
@@ -180,7 +180,9 @@ class OryxLossesSummary(ETL):
         self.data = trim_df(self.data)
 
 
-class OryxLossesItemV2(OryxLossesItem):
+# Classes for SCD type two update
+
+class OryxLossesItemSCD2(OryxLossesItem):
     """Enhanced version of OryxLossesItem that uses start_date and stop_date instead of as_of for record keeping.
     As a result, db_conn is no longer optional here
     Compares parsed data with db:
@@ -199,44 +201,29 @@ class OryxLossesItemV2(OryxLossesItem):
 
     def transform(self):
         super().transform()
-        prior_data = self._get_prior_data()
-        self.data = self._rolling_update(prior_data)
 
     def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
-        persist_data(self, out_path=path, db_table=table)
+        persist_data_scd2(self, out_path=path, db_table=table)
 
-    def _get_prior_data(self) -> dict:
-        query = """SELECT * FROM loss_item
-                   WHERE start_date <= ?
-                   AND stop_date >= ?
-                """
-        as_of = self._get_as_of_date()
-        with self.db as db_connection:
-            prior_data = db_connection.run_query(query, [as_of, as_of])
-        logger.debug(f"Fetched {len(prior_data)} records active as of {as_of}")
-        return prior_data
 
-    def _get_as_of_date(self):
-        pass
+class OryxLossesSummarySCD2(OryxLossesSummary):
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 db_conn: Union[Path, str],
+                 metadata: Optional = None):
+        super().__init__(source, spark, metadata=metadata, db_conn=db_conn)
 
-    def _remove_unchanged(self, prior_data: dataframe) -> dataframe:
-        pass
+    def extract(self):
+        super().extract()
 
-    def _stop_old_data(self, prior_data: dataframe) -> dataframe:
-        pass
+    def transform(self):
+        super().transform()
 
-    def _start_new(self, prior_data: dataframe) -> dataframe:
-        pass
-
-    def _rolling_update(self, prior_data: dataframe) -> dataframe:
-        rolling_data = self.data
-        rolling_data = self._remove_unchanged(prior_data)
-        rolling_data = self._stop_old_data(prior_data)
-        rolling_data = self._start_new(prior_data)
-        return rolling_data
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
+        persist_data_scd2(self, out_path=path, db_table=table)
 
 
 ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,
               "OryxLossesItem": OryxLossesItem,
               "OryxLossesProofs": OryxLossesProofs,
-              "OryxLossesItemV2": OryxLossesItemV2}
+              "OryxLossesItemSCD2": OryxLossesItemSCD2,
+              "OryxLossesSummarySCD2": OryxLossesSummarySCD2}
