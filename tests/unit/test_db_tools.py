@@ -24,7 +24,7 @@ class TestIntegrationDBLocal(TestCase):
         self.dbpath = Path(tempdir) / dbname
         self.conn = sqlite3.connect(self.dbpath)
         self.cursor = self.conn.cursor()
-        config_path = Path(__file__).parent.parent / 'config' / "db" / "oryxloss_schema_rolling.yaml"
+        config_path = Path(__file__).parent.parent.parent / 'config' / "db" / "oryxloss_schema_rolling.yaml"
         with open(config_path) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -48,14 +48,14 @@ class TestIntegrationDBLocal(TestCase):
         self.cursor.execute(loss_tbl_sql)
 
         # adding data
-        self.base_data_path = Path("data") / Path("loss_input_2_basic_loss_item.csv")
+        self.base_data_path = Path("../data") / Path("loss_input_2_basic_loss_item.csv")
         with open(self.base_data_path) as f:
             self.data = pd.read_csv(f)
         self.data.to_sql(self.tbl_name, self.conn, if_exists="replace", index=False)
 
 
         # reading in temp table data and saving as formatted version for simpler testing downstream
-        temp_data_path = Path("data") / Path("loss_input_1.csv")
+        temp_data_path = Path("../data") / Path("loss_input_1.csv")
         with open(temp_data_path) as f:
             temp_data = pd.read_csv(f)
         temp_data["start_date"] = temp_data["as_of"]
@@ -106,7 +106,7 @@ class TestIntegrationDBLocal(TestCase):
             self.assertEqual(len(result), len(expected_columns))
 
     def test_format_df_for_temp_storage(self):
-        data_path = Path("data") / Path("loss_input_1.csv")
+        data_path = Path("../data") / Path("loss_input_1.csv")
         with open(data_path) as f:
             data = pd.read_csv(f)
         sparkdf_mock = MagicMock()
@@ -157,7 +157,7 @@ class TestIntegrationDBLocal(TestCase):
         table_name = self.tbl_name
         temp_data = self.temp_data
 
-        expected_data_path = Path("data") / Path("loss_input_3_expected_loss_item.csv")
+        expected_data_path = Path("../data") / Path("loss_input_3_expected_loss_item.csv")
         with open(expected_data_path) as f:
             expected_df = pd.read_csv(f)
 
@@ -199,7 +199,7 @@ class TestIntegrationDBLocal(TestCase):
         sparkdf_mock.toPandas.return_value = self.temp_data
         table_name = self.tbl_name
 
-        expected_data_path = Path("data") / Path("loss_input_3_expected_loss_item.csv")
+        expected_data_path = Path("../data") / Path("loss_input_3_expected_loss_item.csv")
         with open(expected_data_path) as f:
             expected_df = pd.read_csv(f)
 
@@ -228,7 +228,7 @@ class TestIntegrationDBLocal_summary(TestCase):
         self.dbpath = Path(tempdir) / dbname
         self.conn = sqlite3.connect(self.dbpath)
         self.cursor = self.conn.cursor()
-        config_path = Path(__file__).parent.parent / 'config' / "db" / "oryxloss_schema_rolling.yaml"
+        config_path = Path(__file__).parent.parent.parent / 'config' / "db" / "oryxloss_schema_rolling.yaml"
         with open(config_path) as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
 
@@ -252,14 +252,14 @@ class TestIntegrationDBLocal_summary(TestCase):
         self.cursor.execute(loss_tbl_sql)
 
         # adding data
-        self.base_data_path = Path("data") / Path("loss_input_5_basic_summary.csv")
+        self.base_data_path = Path("../data") / Path("loss_input_5_basic_summary.csv")
         with open(self.base_data_path) as f:
             self.data = pd.read_csv(f)
         self.data.to_sql(self.tbl_name, self.conn, if_exists="replace", index=False)
 
 
         # reading in temp table data and saving as formatted version for simpler testing downstream
-        temp_data_path = Path("data") / Path("loss_input_4_summary.csv")
+        temp_data_path = Path("../data") / Path("loss_input_4_summary.csv")
         with open(temp_data_path) as f:
             temp_data = pd.read_csv(f)
         temp_data["start_date"] = temp_data["as_of"]
@@ -310,7 +310,7 @@ class TestIntegrationDBLocal_summary(TestCase):
             self.assertEqual(len(result), len(expected_columns))
 
     def test_format_df_for_temp_storage(self):
-        data_path = Path("data") / Path("loss_input_4_summary.csv")
+        data_path = Path("../data") / Path("loss_input_4_summary.csv")
         with open(data_path) as f:
             data = pd.read_csv(f)
         sparkdf_mock = MagicMock()
@@ -361,7 +361,7 @@ class TestIntegrationDBLocal_summary(TestCase):
         table_name = self.tbl_name
         temp_data = self.temp_data
 
-        expected_data_path = Path("data") / Path("loss_input_6_expected_summary.csv")
+        expected_data_path = Path("../data") / Path("loss_input_6_expected_summary.csv")
         with open(expected_data_path) as f:
             expected_df = pd.read_csv(f)
 
@@ -404,7 +404,7 @@ class TestIntegrationDBLocal_summary(TestCase):
         sparkdf_mock.toPandas.return_value = self.temp_data
         table_name = self.tbl_name
 
-        expected_data_path = Path("data") / Path("loss_input_6_expected_summary.csv")
+        expected_data_path = Path("../data") / Path("loss_input_6_expected_summary.csv")
         with open(expected_data_path) as f:
             expected_df = pd.read_csv(f)
 
