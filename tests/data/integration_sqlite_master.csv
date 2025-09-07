@@ -1,0 +1,6 @@
+type,name,tbl_name,rootpage,sql
+table,summary,summary,2,"CREATE TABLE summary (as_of TEXT, conflict TEXT, party TEXT, category_name TEXT, destroyed INTEGER, damaged INTEGER, abandoned INTEGER, captured INTEGER, total INTEGER)"
+table,proofs,proofs,3,"CREATE TABLE proofs (id INTEGER PRIMARY KEY AUTOINCREMENT, proof TEXT UNIQUE)"
+index,sqlite_autoindex_proofs_1,proofs,4,
+table,sqlite_sequence,sqlite_sequence,5,"CREATE TABLE sqlite_sequence(name,seq)"
+table,loss_item,loss_item,6,"CREATE TABLE loss_item (as_of TEXT, conflict TEXT, party TEXT, category_name TEXT, type_name TEXT, loss_id INTEGER, loss_type TEXT, proof_id INTEGER, FOREIGN KEY (proof_id) REFERENCES proofs(id))"
