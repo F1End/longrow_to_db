@@ -16,5 +16,11 @@ class TestOryxLossesSummary(unittest.TestCase):
         pass
 
 
+class TestOryxLossesCategories(unittest.TestCase):
+
+    def test_integration(self):
+
+
+
 if __name__ == '__main__':
     unittest.main()

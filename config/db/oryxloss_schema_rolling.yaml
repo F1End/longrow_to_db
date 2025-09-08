@@ -42,8 +42,8 @@ tables:
         type: TEXT
       party:
         type: TEXT
-      category_name:
-        type: TEXT
+      category_id:
+        type: INTEGER
       type_name:
         type: TEXT
       loss_id:
@@ -56,6 +56,15 @@ tables:
       - column: proof_id
         references_table: proofs
         references_column: id
+
+  category_names:
+    columns:
+      id:
+        type: INTEGER
+        auto_inc_primary_key: true
+      category:
+        type: TEXT
+        unique: true
 
 indexes:
   idx_item_start_date:

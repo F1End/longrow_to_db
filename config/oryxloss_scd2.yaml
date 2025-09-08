@@ -1,6 +1,6 @@
 # Modified config for processing both Russian and Ukrainian losses from Oryx, based on longrow input, but using SCD type two storage for summary and loss item tables
 
-pipeline: "Oryx losses full - default"
+pipeline: "Oryx losses full - SCD2"
 tasks:
   - class: OryxLossesSummarySCD2
     table: summary
@@ -28,6 +28,16 @@ tasks:
         method: resolve_from_filename
         args:
           attack-on-europe: "Russo-Ukrainian_War"
+
+  - class: OryxLossesCategories
+    table: category_names
+    steps: etl
+    metadata:
+      generated:
+        - column: conflict
+          method: resolve_from_filename
+          args:
+            attack-on-europe: "Russo-Ukrainian_War"
 
   - class: OryxLossesItemSCD2
     table: loss_item

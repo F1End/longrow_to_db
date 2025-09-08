@@ -180,6 +180,25 @@ class OryxLossesSummary(ETL):
         self.data = trim_df(self.data)
 
 
+class OryxLossesCategories(OryxLossesProofs):
+    def __init__(self, source: Union[Path, str], spark: SparkSession,
+                 metadata: Optional = None, db_conn: Optional = None):
+        super().__init__(source, spark, metadata, db_conn)
+
+    def extract(self):
+        super().extract()
+
+    def transform(self):
+        logger.debug("Running transformations...")
+        self._trim_df()
+        self.data = self.data.select("category_name").distinct()
+        self.data = self.data.withColumnRenamed("category_name", "category")
+        if self.metadata:
+            pass
+
+    def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
+        super().load(path=path, table=table)
+
 # Classes for SCD type two update
 
 class OryxLossesItemSCD2(OryxLossesItem):
@@ -195,15 +214,33 @@ class OryxLossesItemSCD2(OryxLossesItem):
                  db_conn: Union[Path, str],
                  metadata: Optional = None):
         super().__init__(source, spark, metadata=metadata, db_conn=db_conn)
+        self.category_keys = {}
 
     def extract(self):
         super().extract()
+        if self.metadata:
+            self.category_keys = self._get_proof_keys()
 
     def transform(self):
         super().transform()
+        if self.category_keys:
+            self._replace_category_with_keys()
 
     def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
         persist_data_scd2(self, out_path=path, db_table=table)
+
+    def _get_category_keys(self) -> dict:
+        with self.db as db_connection:
+            categories_and_keys = db_connection.fetch_unique_data(self.data, "category_name", "category_names", "category")
+        logger.debug(f"Fetched {len(categories_and_keys)} categories for look-up.")
+        print(f"Fetched {len(categories_and_keys)} categories for look-up.")
+        categories_and_keys = {cat: key for key, cat in categories_and_keys}
+        return categories_and_keys
+
+    def _replace_category_with_keys(self):
+        mapping = create_map([lit(x) for x in chain(*self.category_keys.items())])
+        self.data = self.data.withColumn("category_id", mapping[self.data["category_name"]])
+        self.data = self.data.drop("category_name")
 
 
 class OryxLossesSummarySCD2(OryxLossesSummary):
@@ -226,4 +263,5 @@ ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,
               "OryxLossesItem": OryxLossesItem,
               "OryxLossesProofs": OryxLossesProofs,
               "OryxLossesItemSCD2": OryxLossesItemSCD2,
-              "OryxLossesSummarySCD2": OryxLossesSummarySCD2}
+              "OryxLossesSummarySCD2": OryxLossesSummarySCD2,
+              "OryxLossesCategories": OryxLossesCategories}
