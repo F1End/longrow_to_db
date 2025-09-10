@@ -219,7 +219,7 @@ class OryxLossesItemSCD2(OryxLossesItem):
     def extract(self):
         super().extract()
         if self.metadata:
-            self.category_keys = self._get_proof_keys()
+            self.category_keys = self._get_category_keys()
 
     def transform(self):
         super().transform()
@@ -233,7 +233,6 @@ class OryxLossesItemSCD2(OryxLossesItem):
         with self.db as db_connection:
             categories_and_keys = db_connection.fetch_unique_data(self.data, "category_name", "category_names", "category")
         logger.debug(f"Fetched {len(categories_and_keys)} categories for look-up.")
-        print(f"Fetched {len(categories_and_keys)} categories for look-up.")
         categories_and_keys = {cat: key for key, cat in categories_and_keys}
         return categories_and_keys
 
