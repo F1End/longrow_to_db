@@ -91,17 +91,19 @@ class TestOryxSchemaSCD2(TestCase):
         data_path = root / "tests" / "data"
 
         # # loading expected values
-        # expected_master_df = pd.read_csv(data_path / "integration_sqlite_master.csv")
-        # expected_summary_df = pd.read_csv(data_path / "integration_summary.csv")
-        # expected_loss_df = pd.read_csv(data_path / "integration_loss_item_joined.csv")
-        # expected_proof_df = pd.read_csv(data_path / "integration_proofs_ordered.csv")
+        expected_master_df = pd.read_csv(data_path / "integration_sqlite_master_scd2.csv")
+        expected_summary_df = pd.read_csv(data_path / "integration_summary_scd2.csv")
+        expected_loss_df = pd.read_csv(data_path / "integration_loss_scd2_expected.csv")
+        expected_loss_0426_df = pd.read_csv(data_path / "integration_loss_scd2_expected_0426.csv")
+        expected_proof_df = pd.read_csv(data_path / "integration_proofs_ordered.csv")
+        expected_category_df = pd.read_csv(data_path / "integration_category.csv")
 
-        input_files = ["2025-04-24_attack-on-europe-documenting-ukrainian_parsed.csv"
-                       # "2025-04-25_attack-on-europe-documenting-ukrainian_parsed.csv",
-                       # "2025-04-26_attack-on-europe-documenting-ukrainian_parsed.csv",
-                       # "2025-04-24_attack-on-europe-documenting-equipment_parsed.csv",
-                       # "2025-04-25_attack-on-europe-documenting-equipment_parsed.csv",
-                       # "2025-04-26_attack-on-europe-documenting-equipment_parsed.csv"
+        input_files = ["2025-04-24_attack-on-europe-documenting-ukrainian_parsed.csv",
+                       "2025-04-25_attack-on-europe-documenting-ukrainian_parsed.csv",
+                       "2025-04-26_attack-on-europe-documenting-ukrainian_parsed.csv",
+                       "2025-04-24_attack-on-europe-documenting-equipment_parsed.csv",
+                       "2025-04-25_attack-on-europe-documenting-equipment_parsed.csv",
+                       "2025-04-26_attack-on-europe-documenting-equipment_parsed.csv"
                        ]
 
         # with tempfile.TemporaryDirectory() as tmpdir:
@@ -151,21 +153,24 @@ class TestOryxSchemaSCD2(TestCase):
         proof_df = pd.read_sql_query(query_proofs, conn)
         category_df = pd.read_sql_query(query_categories, conn)
         loss_df["proof"] = loss_df["proof"].str.strip()  # it seems sometimes trailing spaces are added by pandas query?
-        print(category_df.to_string())
 
-        # master_df.to_csv("scd2_master_1.csv", index=False)
-        # summary_df.to_csv("scd2_summary_1.csv", index=False)
-        loss_df.to_csv("scd2_loss_item_expected.csv", index=False)
-        # loss_df_2.to_csv("scd2_loss_item_2.csv", index=False)
-        # proof_df.to_csv("scd2_proof_1.csv", index=False)
-        # category_df.to_csv("scd2_category_1.csv", index=False)
+        # master_df.to_csv("scd2_master_1b.csv", index=False)
+        # summary_df.to_csv("scd2_summary_1b.csv", index=False)
+        # loss_df.to_csv("scd2_loss_item_expectedb_2.csv", index=False)
+        # # loss_df_2.to_csv("scd2_loss_item_2.csv", index=False)
+        # proof_df.to_csv("scd2_proof_1b.csv", index=False)
+        # category_df.to_csv("scd2_category_1b.csv", index=False)
+
+        loss_0426_df = loss_df.loc[loss_df["stop_date"] == "2222-12-31"]
+        loss_0426_df.to_csv("test_loss_0426.csv", index=False)
 
 
-
-        # pd.testing.assert_frame_equal(master_df, expected_master_df)
-        # pd.testing.assert_frame_equal(summary_df, expected_summary_df)
-        # pd.testing.assert_frame_equal(loss_df, expected_loss_df)
-        # pd.testing.assert_frame_equal(proof_df, expected_proof_df)
+        pd.testing.assert_frame_equal(master_df, expected_master_df)
+        pd.testing.assert_frame_equal(summary_df, expected_summary_df)
+        pd.testing.assert_frame_equal(proof_df, expected_proof_df)
+        pd.testing.assert_frame_equal(category_df, expected_category_df)
+        pd.testing.assert_frame_equal(loss_df, expected_loss_df)
+        pd.testing.assert_frame_equal(loss_0426_df, expected_loss_0426_df)
 
 
 if __name__ == '__main__':
