@@ -74,14 +74,15 @@ class DBConn:
     def roll_db_data(self, pyspark_df, table_name: str):
         pandas_df = pyspark_df.toPandas()
 
-    def append_db_scd_type_two(self, pyspark_df, table_name: str) -> None:
+    def append_db_scd_type_two(self, pyspark_df, table_name: str,
+                               filter_columns: Optional[list[str]] = None) -> None:
         temp_table_name = self._create_temp_table(table_name)
         temp_data = self._format_df_for_temp_storage(pyspark_df)
         stop_date = temp_data["stop_date"].unique().tolist()
         if len(stop_date) > 1:
             raise ValueError(f"Stop date must be consistent, but multiple values present: {stop_date}")
         self.append_db(temp_data, temp_table_name)
-        self._execute_scd_update(table_name, temp_table_name, stop_date[0])
+        self._execute_scd_update(table_name, temp_table_name, stop_date[0], filter_columns)
 
     def _format_df_for_temp_storage(self, pyspark_df: dataframe) -> None:
         pandas_df = pyspark_df.toPandas()
@@ -96,21 +97,33 @@ class DBConn:
             logger.warning("Skipping temp df formatting as it does not follow structure required for as_of -> start_date/stop_date conversion.")
         return pandas_df
 
-    def _execute_scd_update(self, table_name: str, temp_table_name: str, stop_date: str):
-        col_filters = self._scd_column_filters(table_name, temp_table_name)
+    def _execute_scd_update(self, table_name: str, temp_table_name: str, stop_date: str,
+                            filter_columns: Optional[list[str]] = None):
+        col_filters = self._scd_column_filters(table_name, temp_table_name, filter_columns)
         close_query = self._sql_scd_close_outdated(table_name, temp_table_name, col_filters)
         append_query = self._sql_scd_insert_new(table_name, temp_table_name, col_filters)
+        # These are commited as a single transaction when the connection is closed.
         self.run_query(close_query, [stop_date], fetch=False)
         self.run_query(append_query, fetch=False)
 
-    def _scd_column_filters(self, table_name, temp_table_name):
+    def _scd_column_filters(self, table_name: str, temp_table_name: str,
+                            content_filter_columns: Optional[list[str]] = None) -> str:
         table_cols_query = f"PRAGMA table_info({table_name})"
         table_cosl_result = self.cursor.execute(table_cols_query).fetchall()
         cols_list = [col_data[1] for col_data in table_cosl_result if col_data[1] not in ["start_date", "stop_date", "as_of"]]
         match_cols = [f"{temp_table_name}.{col_name} = {table_name}.{col_name}" for col_name in cols_list]
+        if content_filter_columns:
+            content_filter = [f"""{col} in ('{"'".join(self._distinct_col_content(temp_table_name, col))}')"""
+                              for col in content_filter_columns]
+            match_cols = match_cols + content_filter
         query_filters = " AND ".join(match_cols)
         return query_filters
 
+    # :todo: test
+    def _distinct_col_content(self, table_name: str, col_name: str) -> list[str]:
+        sql = f"""SELECT DISTINCT {col_name} FROM {table_name}"""
+        results = self.run_query(sql, fetch=True)[0]
+        return results
 
     def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
         sql = f"""

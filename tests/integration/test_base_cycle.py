@@ -118,6 +118,14 @@ class TestOryxSchemaSCD2(TestCase):
                     "--db_path", tempdir / test_db,
                     "--data_file"]
 
+        # base_cmd = [sys.executable,
+        #             root / "main.py",
+        #             "--base_config", config_path / "default_config.yaml",
+        #             "--job_config", config_path / "oryxloss.yaml",
+        #             "--init_db", config_path / "db" / "oryxloss_schema.yaml",
+        #             "--db_path", tempdir / test_db,
+        #             "--data_file"]
+
         commands = []
 
         for input_file in input_files:
@@ -127,7 +135,7 @@ class TestOryxSchemaSCD2(TestCase):
         for command in commands:
             print("Running command:", command)
             result = subprocess.run(command, capture_output=True, text=True, check=True)
-            print(result)
+            # print(result)
 
         new_db_file = tempdir / test_db
         conn = sqlite3.connect(new_db_file)
@@ -136,7 +144,7 @@ class TestOryxSchemaSCD2(TestCase):
         query_summary = """SELECT * FROM summary"""
         # query_loss_item = """SELECT li.start_date, li.stop_date, li.conflict, li.party, li.category_name, li.type_name, li.loss_id, li.loss_type, p.proof
         #                      FROM loss_item li INNER JOIN proofs p ON li.proof_id = p.id"""
-        query_loss_item = """SELECT li.start_date, li.stop_date, li.conflict, li.party, cn.category, li.type_name, li.loss_id, li.loss_type, p.proof 
+        query_loss_item = """SELECT li.start_date, li.stop_date, li.conflict, li.party, cn.category, li.type_name, li.loss_id, li.loss_type, p.proof
                              FROM loss_item li INNER JOIN proofs p ON li.proof_id = p.id
                              INNER JOIN category_names cn ON li.category_id = cn.id"""
         # query_loss_item = """SELECT *
@@ -154,15 +162,16 @@ class TestOryxSchemaSCD2(TestCase):
         category_df = pd.read_sql_query(query_categories, conn)
         loss_df["proof"] = loss_df["proof"].str.strip()  # it seems sometimes trailing spaces are added by pandas query?
 
-        # master_df.to_csv("scd2_master_1b.csv", index=False)
-        # summary_df.to_csv("scd2_summary_1b.csv", index=False)
-        # loss_df.to_csv("scd2_loss_item_expectedb_2.csv", index=False)
-        # # loss_df_2.to_csv("scd2_loss_item_2.csv", index=False)
-        # proof_df.to_csv("scd2_proof_1b.csv", index=False)
-        # category_df.to_csv("scd2_category_1b.csv", index=False)
+        master_df.to_csv("scd2_master_1c.csv", index=False)
+        summary_df.to_csv("scd2_summary_1c.csv", index=False)
+        loss_df.to_csv("scd2_loss_item_expectedc.csv", index=False)
+        # loss_df_2.to_csv("scd2_loss_item_2.csv", index=False)
+        proof_df.to_csv("scd2_proof_1c.csv", index=False)
+        category_df.to_csv("scd2_category_1c.csv", index=False)
 
         loss_0426_df = loss_df.loc[loss_df["stop_date"] == "2222-12-31"]
-        loss_0426_df.to_csv("test_loss_0426.csv", index=False)
+        loss_0426_df = loss_df.loc[loss_df["party"] == "2222-12-31"]
+        loss_0426_df.to_csv("test_loss_0426_c.csv", index=False)
 
 
         pd.testing.assert_frame_equal(master_df, expected_master_df)

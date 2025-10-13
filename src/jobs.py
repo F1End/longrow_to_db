@@ -227,7 +227,7 @@ class OryxLossesItemSCD2(OryxLossesItem):
             self._replace_category_with_keys()
 
     def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
-        persist_data_scd2(self, out_path=path, db_table=table)
+        persist_data_scd2(self, out_path=path, db_table=table, filter_columns=["party"])
 
     def _get_category_keys(self) -> dict:
         with self.db as db_connection:
@@ -255,7 +255,7 @@ class OryxLossesSummarySCD2(OryxLossesSummary):
         super().transform()
 
     def load(self, path: Optional[Union[Path, str]] = None, table: Optional[str] = None):
-        persist_data_scd2(self, out_path=path, db_table=table)
+        persist_data_scd2(self, out_path=path, db_table=table, filter_columns=["party"])
 
 
 ETLCLASSES = {"OryxLossesSummary": OryxLossesSummary,

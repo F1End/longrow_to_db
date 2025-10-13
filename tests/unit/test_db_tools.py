@@ -192,6 +192,47 @@ class TestIntegrationDBLocal(TestCase):
             result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
             pd.testing.assert_frame_equal(result_final_df, expected_df)
 
+    # Update but now using "party" column to split on values
+    def test_execute_scd_update__with_filter_col(self):
+        table_name = self.tbl_name
+        temp_data = self.temp_data
+
+        expected_data_path = Path("../data") / Path("loss_input_3_expected_loss_item.csv")
+        with open(expected_data_path) as f:
+            expected_df = pd.read_csv(f)
+
+        temp_table_name = f"temp_{table_name}"
+        temp_tbl_sql = f"""CREATE TEMP TABLE "{temp_table_name}" (
+                          "start_date" TEXT,
+                          "stop_date" TEXT,
+                          "conflict" TEXT,
+                          "party" TEXT,
+                          "category_name" TEXT,
+                          "type_name" TEXT,
+                          "loss_id" INTEGER,
+                          "loss_type" TEXT,
+                          "proof_id" INTEGER
+                          )"""
+
+        # create connector (temp table exists only withint he same session)
+        with db_tools.DBConn(self.dbpath) as conn:
+            # create temp table and load data
+            conn.cursor.execute(temp_tbl_sql)
+            temp_data.to_sql(temp_table_name, conn.conn, if_exists="replace", index=False)
+
+            # test if temp loading was successfully
+            query_tbl = f"SELECT * FROM {temp_table_name}"
+            result_df = pd.read_sql_query(query_tbl, conn.conn)
+            self.assertEqual(len(result_df), len(temp_data))
+            pd.testing.assert_frame_equal(result_df, temp_data)
+
+            # The actual test
+            filter_columns = ["party"]
+            conn._execute_scd_update(table_name, temp_table_name, "2025-03-31", filter_columns)
+            updated_tbl_query = f"SELECT * FROM {table_name}"
+            result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
+            pd.testing.assert_frame_equal(result_final_df, expected_df)
+
     # Testing appending data to temp_table
     def test_append_db_scd_type_two(self):
         # Setting up data and mock to create temp table
@@ -212,11 +253,21 @@ class TestIntegrationDBLocal(TestCase):
             pd.testing.assert_frame_equal(result_final_df, expected_df)
 
     def test__scd_column_filters(self):
+        # Case 1: No conent filter
         with db_tools.DBConn(self.dbpath) as conn:
             sql_filter = conn._scd_column_filters(table_name=self.tbl_name, temp_table_name="temp_loss_item")
             expected_filter = """temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id"""
             self.maxDiff = None
             self.assertEqual(sql_filter, expected_filter)
+
+        # # # Case 2: Filter on "party" :todo:
+        # with db_tools.DBConn(self.dbpath) as conn:
+        #     sql_filter = conn._scd_column_filters(table_name=self.tbl_name, temp_table_name="temp_loss_item", content_filter_columns=["party"])
+        #     expected_filter = """temp_loss_item.conflict = loss_item.conflict AND temp_loss_item.party = loss_item.party AND temp_loss_item.category_name = loss_item.category_name AND temp_loss_item.type_name = loss_item.type_name AND temp_loss_item.loss_id = loss_item.loss_id AND temp_loss_item.loss_type = loss_item.loss_type AND temp_loss_item.proof_id = loss_item.proof_id"""
+        #     self.maxDiff = None
+        #     self.assertEqual(sql_filter, expected_filter)
+
+
 
 
 class TestIntegrationDBLocal_summary(TestCase):
@@ -397,6 +448,49 @@ class TestIntegrationDBLocal_summary(TestCase):
             result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
             pd.testing.assert_frame_equal(result_final_df, expected_df)
 
+    # Update but now using "party" column to split on values
+    def test_execute_scd_update__with_filter_col(self):
+        table_name = self.tbl_name
+        temp_data = self.temp_data
+
+        expected_data_path = Path("../data") / Path("loss_input_6_expected_summary.csv")
+        with open(expected_data_path) as f:
+            expected_df = pd.read_csv(f)
+
+        temp_table_name = f"temp_{table_name}"
+        temp_tbl_sql = f"""CREATE TEMP TABLE "{temp_table_name}" (
+                          "start_date" TEXT,
+                          "stop_date" TEXT,
+                          "conflict" TEXT,
+                          "party" TEXT,
+                          "category_name" TEXT,
+                          "destroyed" INTEGER,
+                          "damaged" INTEGER,
+                          "abandoned" INTEGER,
+                          "captured" INTEGER,
+                          "total" INTEGER
+                          )"""
+
+        # Case 2: Testing with special filter-in column (to split on party)
+        # create connector (temp table exists only within the same session)
+        with db_tools.DBConn(self.dbpath) as conn:
+            # create temp table and load data
+            conn.cursor.execute(temp_tbl_sql)
+            temp_data.to_sql(temp_table_name, conn.conn, if_exists="replace", index=False)
+
+            # test if temp loading was successfully
+            query_tbl = f"SELECT * FROM {temp_table_name}"
+            result_df = pd.read_sql_query(query_tbl, conn.conn)
+            self.assertEqual(len(result_df), len(temp_data))
+            pd.testing.assert_frame_equal(result_df, temp_data)
+
+            # The actual test
+            filter_columns = ["party"]
+            conn._execute_scd_update(table_name, temp_table_name, "2025-04-01", filter_columns)
+            updated_tbl_query = f"SELECT * FROM {table_name}"
+            result_final_df = pd.read_sql_query(updated_tbl_query, conn.conn)
+            pd.testing.assert_frame_equal(result_final_df, expected_df)
+
     # Testing appending data to temp_table
     def test_append_db_scd_type_two(self):
         # Setting up data and mock to create temp table
@@ -422,6 +516,13 @@ class TestIntegrationDBLocal_summary(TestCase):
             expected_filter = """temp_summary.conflict = summary.conflict AND temp_summary.party = summary.party AND temp_summary.category_name = summary.category_name AND temp_summary.destroyed = summary.destroyed AND temp_summary.damaged = summary.damaged AND temp_summary.abandoned = summary.abandoned AND temp_summary.captured = summary.captured AND temp_summary.total = summary.total"""
             self.maxDiff = None
             self.assertEqual(sql_filter, expected_filter)
+
+        # # Case 2: :todo
+        # with db_tools.DBConn(self.dbpath) as conn:
+        #     sql_filter = conn._scd_column_filters(table_name=self.tbl_name, temp_table_name=f"temp_{self.tbl_name}", content_filter_columns=["party"])
+        #     expected_filter = """temp_summary.conflict = summary.conflict AND temp_summary.party = summary.party AND temp_summary.category_name = summary.category_name AND temp_summary.destroyed = summary.destroyed AND temp_summary.damaged = summary.damaged AND temp_summary.abandoned = summary.abandoned AND temp_summary.captured = summary.captured AND temp_summary.total = summary.total"""
+        #     self.maxDiff = None
+        #     self.assertEqual(sql_filter, expected_filter)
 
 
 # class TestDBConn(TestCase):
