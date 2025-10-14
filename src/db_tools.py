@@ -40,6 +40,7 @@ class DBConn:
             -> Union[Any, None]:
         logger.debug(f"Running query: {sql_safe}")
         logger.debug(f"Query items: {data}")
+        print(f"Running query: {sql_safe}")
         if data:
             load = self.cursor.execute(sql_safe, data)
         else:
@@ -99,23 +100,19 @@ class DBConn:
 
     def _execute_scd_update(self, table_name: str, temp_table_name: str, stop_date: str,
                             filter_columns: Optional[list[str]] = None):
-        col_filters = self._scd_column_filters(table_name, temp_table_name, filter_columns)
-        close_query = self._sql_scd_close_outdated(table_name, temp_table_name, col_filters)
+        col_filters = self._scd_column_filters(table_name, temp_table_name)
+        close_query = self._sql_scd_close_outdated(table_name, temp_table_name, col_filters, filter_columns)
         append_query = self._sql_scd_insert_new(table_name, temp_table_name, col_filters)
+
         # These are commited as a single transaction when the connection is closed.
         self.run_query(close_query, [stop_date], fetch=False)
         self.run_query(append_query, fetch=False)
 
-    def _scd_column_filters(self, table_name: str, temp_table_name: str,
-                            content_filter_columns: Optional[list[str]] = None) -> str:
+    def _scd_column_filters(self, table_name: str, temp_table_name: str) -> str:
         table_cols_query = f"PRAGMA table_info({table_name})"
         table_cosl_result = self.cursor.execute(table_cols_query).fetchall()
         cols_list = [col_data[1] for col_data in table_cosl_result if col_data[1] not in ["start_date", "stop_date", "as_of"]]
         match_cols = [f"{temp_table_name}.{col_name} = {table_name}.{col_name}" for col_name in cols_list]
-        if content_filter_columns:
-            content_filter = [f"""{col} in ('{"'".join(self._distinct_col_content(temp_table_name, col))}')"""
-                              for col in content_filter_columns]
-            match_cols = match_cols + content_filter
         query_filters = " AND ".join(match_cols)
         return query_filters
 
@@ -125,7 +122,8 @@ class DBConn:
         results = self.run_query(sql, fetch=True)[0]
         return results
 
-    def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
+    def _sql_scd_close_outdated(self, table_name: str, temp_table_name: str, sql_filter: str,
+                                filter_columns: Optional[list[str]] = None) -> str:
         sql = f"""
         UPDATE {table_name}
         SET stop_date = ?
@@ -135,6 +133,13 @@ class DBConn:
         WHERE {sql_filter}
         )
         """
+
+        if filter_columns:
+            content_filter = [f"""{col} in ('{"'".join(self._distinct_col_content(temp_table_name, col))}')"""
+                              for col in filter_columns]
+            content_filter = " AND ".join(content_filter)
+            sql = sql + " AND " + content_filter
+
         return sql
 
     def _sql_scd_insert_new(self, table_name: str, temp_table_name: str, sql_filter: str) -> str:
