@@ -40,7 +40,6 @@ class DBConn:
             -> Union[Any, None]:
         logger.debug(f"Running query: {sql_safe}")
         logger.debug(f"Query items: {data}")
-        print(f"Running query: {sql_safe}")
         if data:
             load = self.cursor.execute(sql_safe, data)
         else:
@@ -132,6 +131,7 @@ class DBConn:
         FROM {temp_table_name}
         WHERE {sql_filter}
         )
+        AND stop_date = "2222-12-31"
         """
 
         if filter_columns:
