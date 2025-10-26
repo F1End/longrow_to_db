@@ -6,7 +6,7 @@ from pathlib import Path
 from collections.abc import Iterable
 import sqlite3
 import logging
-from datetime import date
+from datetime import date, datetime
 import re
 
 import pandas as pd

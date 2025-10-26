@@ -48,15 +48,15 @@ class TestIntegrationDBLocal2(TestCase):
 
     @patch("src.db_tools.DBConn._format_df_for_temp_storage")
     def test_append_db_scd_type_two(self, mock_format_df_tmp):
-        # data_files = ["raw_temp_df_ukr_loss_item_0424.csv",
-        #               "raw_temp_df_ukr_loss_item_0425.csv",
-        #               "raw_temp_df_ukr_loss_item_0426.csv"]
         data_files = ["raw_temp_df_ukr_summary_0424.csv",
+                      "raw_temp_df_ru_summary_0424.csv",
                       "raw_temp_df_ukr_summary_0425.csv",
-                      "raw_temp_df_ukr_summary_0426.csv"]
+                      "raw_temp_df_ru_summary_0425.csv",
+                      "raw_temp_df_ukr_summary_0426.csv",
+                      "raw_temp_df_ru_summary_0426.csv"]
         data_files_path = Path("../data")
-        expected_summ_df = pd.read_csv(data_files_path / "integration_summary_scd2.csv")
-        expected_summ_df = expected_summ_df[expected_summ_df["party"] == "Ukraine"]
+        expected_summ_df = pd.read_csv(data_files_path / "integration_summary_scd3.csv")
+        expected_summ_df = expected_summ_df
         file_list = [data_files_path / Path(f) for f in data_files]
         df_list = []
         for file in file_list:
@@ -76,9 +76,15 @@ class TestIntegrationDBLocal2(TestCase):
 
         query = "SELECT * FROM summary"
         loss_df = pd.read_sql_query(query, self.conn)
-        loss_df.to_csv("db_int_summ_1.csv")
-        print(loss_df.to_string())
-        pd.testing.assert_frame_equal(loss_df, expected_summ_df)
+        loss_df = loss_df.sort_values(by=["total", "category_name", "stop_date", "start_date"]).reset_index(
+            drop=True)
+        expected_summ_df = expected_summ_df.sort_values(by=["total", "category_name", "stop_date", "start_date"]).reset_index(
+            drop=True)
+        start_dates = ["2025-04-24", "2025-04-25", "2025-04-26"]
+        for date in start_dates:
+            sub_loss_df = loss_df[loss_df["start_date"] == date]
+            sub_expected_summ_df = expected_summ_df[expected_summ_df["start_date"] == date]
+            pd.testing.assert_frame_equal(sub_loss_df, sub_expected_summ_df)
 
 
 if __name__ == '__main__':
