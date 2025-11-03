@@ -1,4 +1,4 @@
-start_date,stop_date,conflict,party,category_name,type_name,loss_id,loss_type,proof
+start_date,stop_date,conflict,party,category,type_name,loss_id,loss_type,proof
 2025-04-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M-55S,1,destroyed,https://twitter.com/UAWeapons/status/1682710915811033092
 2025-04-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,M-55S,1,damaged,https://twitter.com/UAWeapons/status/1680549443043483654
 2025-04-26,2222-12-31,Russo-Ukrainian_War,Ukraine,Tanks,T-64A,1,destroyed,https://i.postimg.cc/dVvPF6kS/2022-04-07-UA-T-64-BV-destroyed.jpg
