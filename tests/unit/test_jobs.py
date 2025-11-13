@@ -41,6 +41,8 @@ class TestOryxLossesCategories(TestCase):
 class TestOryxLossesItemSCD2(TestCase):
 
     def test_integration(self):
+        # Case 1: Breaking of numbered-merged rows
+
         # tempdir = Path(mkdtemp())
         # test_db = "wartracker_regression.db"
         # db_path =
@@ -58,8 +60,39 @@ class TestOryxLossesItemSCD2(TestCase):
         instance.extract()
         instance.transform()
 
+        # instance._trim_df()
+        # print(1)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._filter_base_cols()
+        # print(2)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._build_cleaned_items()
+        # print(3)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._split_to_losses()
+        # print(4)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._split_loss_to_rows()
+        # print(5)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._remove_surplus_loss_data()
+        # print(6)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+        # instance._filter_final_cols()
+        # print(7)
+        # pd_df = instance.data.toPandas()
+        # print(pd_df.to_string())
+
         pd_df = instance.data.toPandas()
         print(pd_df.to_string())
+
+        # Case 2: Running a whole file
 
 
 if __name__ == '__main__':

@@ -60,8 +60,19 @@ class OryxLossesItem(ETL):
         """
         Moving descriptions with multiple losses into more processable, comma delimited text
         """
+        # self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
+        #              .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
+        #              .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
+        #              .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
+        # self.data = (
+        #     self.data
+        #     .withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
+        #     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
+        #     .withColumn("cleaned_items", regexp_replace(col("loss_item"), r"\b(and)\b", ","))
+        # )
         self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
-                     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
+                     # .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\d+)\s+", r"\1,"))
+                     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(?<=\S)\s+(?=\S)", ","))
                      .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
                      .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
 
@@ -69,8 +80,14 @@ class OryxLossesItem(ETL):
         """
 
         """
-        self.data = (self.data.withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
-                     .withColumn("loss_type", regexp_replace(self.data["loss_item"], r".*?,\s*", "")))
+        # self.data = (self.data.withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
+        #              .withColumn("loss_type", regexp_replace(self.data["loss_item"], r".*?,\s*", "")))
+        # self.data = (self.data
+        #              .withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
+        #              .withColumn("loss_type", element_at(split(self.data["cleaned_items"], ",\s*"), -1)))
+        self.data = (self.data
+                     .withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
+                     .withColumn("loss_type", regexp_replace(self.data["cleaned_items"], r".*?,\s*", "")))
 
     def _split_loss_to_rows(self):
         """
