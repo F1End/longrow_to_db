@@ -116,7 +116,7 @@ class TestOryxSchemaSCD2(TestCase):
                        "2025-04-25_attack-on-europe-documenting-ukrainian_parsed.csv",
                        "2025-04-26_attack-on-europe-documenting-ukrainian_parsed.csv"
                        ]
-        input_files = ["2025-04-25_parsing_test_1-ukrainian_parsed.csv"]
+        input_files = ["2025-04-25_parsing_test_1__-attack-on-europe-documenting-ukrainian-__parsed.csv"]
 
         # saved_df = pd.read_csv("summary_scd_2_d1.csv")
         #
@@ -149,19 +149,27 @@ class TestOryxSchemaSCD2(TestCase):
 
         # run commands
         for command in commands:
-            print("Running command:", command)
-            result = subprocess.run(command, capture_output=True, text=True, check=True)
-            print("____STDOUT____")
-            print(result.stdout.strip())
-            print("____STDERR____")
-            print(result.stderr.strip())
-            print("______________")
-            new_db_file = tempdir / test_db
-            conn = sqlite3.connect(new_db_file)
-            query_summary = """SELECT * FROM summary"""
-            summ = pd.read_sql_query(query_summary, conn)
-            print(summ.to_string())
-            conn.close()
+            try:
+                print("Running command:", command)
+                result = subprocess.run(command, capture_output=True, text=True, check=True)
+                print("____STDOUT____")
+                print(result.stdout.strip())
+                print("____STDERR____")
+                print(result.stderr.strip())
+                print("______________")
+                new_db_file = tempdir / test_db
+                conn = sqlite3.connect(new_db_file)
+                query_summary = """SELECT * FROM summary"""
+                summ = pd.read_sql_query(query_summary, conn)
+                print(summ.to_string())
+                conn.close()
+            except subprocess.CalledProcessError as e:
+                print("Command failed with exit code:", e.returncode)
+                print("--- STDOUT ---")
+                print(e.stdout)
+                print("--- STDERR (likely traceback) ---")
+                print(e.stderr)
+                raise
 
         new_db_file = tempdir / test_db
         conn = sqlite3.connect(new_db_file)
