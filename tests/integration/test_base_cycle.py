@@ -116,7 +116,7 @@ class TestOryxSchemaSCD2(TestCase):
                        "2025-04-25_attack-on-europe-documenting-ukrainian_parsed.csv",
                        "2025-04-26_attack-on-europe-documenting-ukrainian_parsed.csv"
                        ]
-        input_files = ["2025-04-25_parsing_test_1__-attack-on-europe-documenting-ukrainian-__parsed.csv"]
+        # input_files = ["2025-04-25_parsing_test_1__-attack-on-europe-documenting-ukrainian-__parsed.csv"]
 
         # saved_df = pd.read_csv("summary_scd_2_d1.csv")
         #
@@ -161,7 +161,7 @@ class TestOryxSchemaSCD2(TestCase):
                 conn = sqlite3.connect(new_db_file)
                 query_summary = """SELECT * FROM summary"""
                 summ = pd.read_sql_query(query_summary, conn)
-                print(summ.to_string())
+                # print(summ.to_string())
                 conn.close()
             except subprocess.CalledProcessError as e:
                 print("Command failed with exit code:", e.returncode)
@@ -206,12 +206,15 @@ class TestOryxSchemaSCD2(TestCase):
         # loss_df.to_csv("test_loss_df_for_edit2.csv")
         print(loss_df.to_string())
 
-        loss_0424_df = loss_df.loc[loss_df["start_date"].isin(["2024-04-24"])]
+        loss_0424_df = loss_df.loc[loss_df["start_date"].isin(["2025-04-24"])]
+        print(f"1: {loss_0424_df.shape}")
 
-        loss_0425_df = loss_df.loc[loss_df["start_date"].isin(["2024-04-24", "2024-04-25"])]
+        loss_0425_df = loss_df.loc[loss_df["start_date"].isin(["2025-04-24", "2025-04-25"])]
         loss_0425_df = loss_0425_df.loc[loss_0425_df["stop_date"] == "2222-12-31"]
+        print(f"2: {loss_0425_df.shape}")
 
         loss_0426_df = loss_df.loc[loss_df["stop_date"] == "2222-12-31"]
+        print(f"3: {loss_0426_df.shape}")
 
         # loss_0426_df.to_csv("test_loss_0426_c_5.csv", index=False)
         category_df = category_df[["category"]]
@@ -242,6 +245,9 @@ class TestOryxSchemaSCD2(TestCase):
         loss_0424_df = loss_0424_df[[col for col in loss_0424_df.columns if col not in ["stop_date", "start_date"]]]
         loss_0425_df = loss_0425_df[[col for col in loss_0425_df.columns if col not in ["stop_date", "start_date"]]]
         loss_0426_df = loss_0426_df[[col for col in loss_0426_df.columns if col not in ["stop_date", "start_date"]]]
+        print(f"4: {loss_0424_df.shape}")
+        print(f"5: {loss_0425_df.shape}")
+        print(f"6: {loss_0426_df.shape}")
 
         expected_loss_0424_df = expected_loss_0424_df[
             [col for col in expected_loss_0424_df.columns if col not in ["stop_date", "start_date", "as_of"]]]
@@ -264,6 +270,11 @@ class TestOryxSchemaSCD2(TestCase):
             drop=True)
         expected_loss_0426_df = expected_loss_0426_df.sort_values(by=["proof", "category", "loss_id"]).reset_index(
             drop=True)
+        loss_0425_df.to_csv(data_path / "loss_0425_251209-1.csv", index=False)
+
+        print(f"7: {loss_0424_df.shape}")
+        print(f"8: {loss_0425_df.shape}")
+        print(f"9: {loss_0426_df.shape}")
 
         pd.testing.assert_frame_equal(proof_df, expected_proof_df)
         pd.testing.assert_frame_equal(category_df, expected_category_df)
