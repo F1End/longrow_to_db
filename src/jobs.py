@@ -7,7 +7,7 @@ import logging
 from itertools import chain
 
 from pyspark.sql.session import SparkSession
-from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode, udf, create_map, lit
+from pyspark.sql.functions import regexp_extract, regexp_replace, col, split, explode, udf, create_map, lit, trim
 from pyspark.sql.types import IntegerType
 from pyspark.sql import dataframe
 
@@ -60,31 +60,63 @@ class OryxLossesItem(ETL):
         """
         Moving descriptions with multiple losses into more processable, comma delimited text
         """
-        # self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
-        #              .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
-        #              .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
-        #              .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
-        # self.data = (
-        #     self.data
-        #     .withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
-        #     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\b\d{1,4})(?!,)(?=\s)", r"\1,"))
-        #     .withColumn("cleaned_items", regexp_replace(col("loss_item"), r"\b(and)\b", ","))
-        # )
-        self.data = (self.data.withColumn("loss_item", regexp_replace(col("loss_item"), r"[()]", ""))
-                     # .withColumn("loss_item", regexp_replace(col("loss_item"), r"(\d+)\s+", r"\1,"))
-                     .withColumn("loss_item", regexp_replace(col("loss_item"), r"(?<=\S)\s+(?=\S)", ","))
-                     .withColumn("cleaned_items", regexp_replace(col("loss_item"), "and", ","))
-                     .withColumn("cleaned_items", regexp_replace(col("cleaned_items"), r"\b(and)\b", "")))
+        self.data = (
+            self.data
+            # 1. Remove parentheses
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(col("loss_item"), r"[()]", "")
+            )
+
+            # 2. Handle ", and <number>" → ",<number>"
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(
+                    col("cleaned_items"),
+                    r",\s*and\s*(?=\d)",
+                    ","
+                )
+            )
+
+            # 3. Handle "<number> and <number>" → "<number>,<number>"
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(
+                    col("cleaned_items"),
+                    r"(?<=\d)\s+and\s+(?=\d)",
+                    ","
+                )
+            )
+
+            # 4. Replace remaining whitespace with underscore
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(col("cleaned_items"), r"\s+", "_")
+            )
+
+            # 5. Remove underscores following commas
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(col("cleaned_items"), r",_+", ",")
+            )
+
+            # 6. Normalize commas
+            .withColumn(
+                "cleaned_items",
+                regexp_replace(col("cleaned_items"), r",+", ",")
+            )
+
+            # 7. Trim leading/trailing commas
+            .withColumn(
+                "cleaned_items",
+                trim(regexp_replace(col("cleaned_items"), r"^,|,$", ""))
+            )
+        )
 
     def _split_to_losses(self):
         """
 
         """
-        # self.data = (self.data.withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
-        #              .withColumn("loss_type", regexp_replace(self.data["loss_item"], r".*?,\s*", "")))
-        # self.data = (self.data
-        #              .withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
-        #              .withColumn("loss_type", element_at(split(self.data["cleaned_items"], ",\s*"), -1)))
         self.data = (self.data
                      .withColumn("loss_id", split(self.data["cleaned_items"], ",\s*"))
                      .withColumn("loss_type", regexp_replace(self.data["cleaned_items"], r".*?,\s*", "")))
