@@ -14,7 +14,7 @@ import pandas as pd
 import yaml
 
 from src import db_tools
-
+from src.tst_utils import compare_dataframes
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -152,17 +152,17 @@ class TestOryxSchemaSCD2(TestCase):
             try:
                 print("Running command:", command)
                 result = subprocess.run(command, capture_output=True, text=True, check=True)
-                print("____STDOUT____")
-                print(result.stdout.strip())
-                print("____STDERR____")
-                print(result.stderr.strip())
-                print("______________")
-                new_db_file = tempdir / test_db
-                conn = sqlite3.connect(new_db_file)
-                query_summary = """SELECT * FROM summary"""
-                summ = pd.read_sql_query(query_summary, conn)
-                # print(summ.to_string())
-                conn.close()
+                # print("____STDOUT____")
+                # print(result.stdout.strip())
+                # print("____STDERR____")
+                # print(result.stderr.strip())
+                # print("______________")
+                # new_db_file = tempdir / test_db
+                # conn = sqlite3.connect(new_db_file)
+                # query_summary = """SELECT * FROM summary"""
+                # summ = pd.read_sql_query(query_summary, conn)
+                # # print(summ.to_string())
+                # conn.close()
             except subprocess.CalledProcessError as e:
                 print("Command failed with exit code:", e.returncode)
                 print("--- STDOUT ---")
@@ -184,14 +184,14 @@ class TestOryxSchemaSCD2(TestCase):
         # query_loss_item = """SELECT *
         #                      FROM loss_item li INNER JOIN proofs p ON li.proof_id = p.id
         #                      INNER JOIN category_names cn ON li.category_id = cn.id"""
-        # query_loss_item_2 = """SELECT * FROM loss_item"""
+        query_loss_item_2 = """SELECT * FROM loss_item"""
         query_proofs = """SELECT proof FROM proofs ORDER BY proof"""
         query_categories = """SELECT * FROM category_names ORDER BY category"""
 
         master_df = pd.read_sql_query(query_master, conn)
         summary_df = pd.read_sql_query(query_summary, conn)
         loss_df = pd.read_sql_query(query_loss_item, conn)
-        # loss_df_2 = pd.read_sql_query(query_loss_item_2, conn)
+        loss_df_2 = pd.read_sql_query(query_loss_item_2, conn)
         proof_df = pd.read_sql_query(query_proofs, conn)
         category_df = pd.read_sql_query(query_categories, conn)
         loss_df["proof"] = loss_df["proof"].str.strip()  # it seems sometimes trailing spaces are added by pandas query?
@@ -200,7 +200,7 @@ class TestOryxSchemaSCD2(TestCase):
         # summary_df.to_csv("scd2_summary_1c_5.csv", index=False)
         # loss_df.to_csv("scd2_loss_item_expectedc_6"
         #                ".csv", index=False)
-        # # loss_df_2.to_csv("scd2_loss_item_2.csv", index=False)
+        loss_df_2.to_csv("scd2_loss_item_20251229-1.csv", index=False)
         # proof_df.to_csv("scd2_proof_1c_4.csv", index=False)
         # category_df.to_csv("scd2_category_1c_4.csv", index=False)
         # loss_df.to_csv("test_loss_df_for_edit2.csv")
@@ -210,7 +210,8 @@ class TestOryxSchemaSCD2(TestCase):
         print(f"1: {loss_0424_df.shape}")
 
         loss_0425_df = loss_df.loc[loss_df["start_date"].isin(["2025-04-24", "2025-04-25"])]
-        loss_0425_df = loss_0425_df.loc[loss_0425_df["stop_date"] == "2222-12-31"]
+        # loss_0425_df = loss_0425_df.loc[loss_0425_df["stop_date"] == "2222-12-31"]
+        loss_0425_df = loss_0425_df.loc[loss_0425_df["stop_date"].isin(["2222-12-31", "2025-04-26"])]
         print(f"2: {loss_0425_df.shape}")
 
         loss_0426_df = loss_df.loc[loss_df["stop_date"] == "2222-12-31"]
@@ -270,7 +271,9 @@ class TestOryxSchemaSCD2(TestCase):
             drop=True)
         expected_loss_0426_df = expected_loss_0426_df.sort_values(by=["proof", "category", "loss_id"]).reset_index(
             drop=True)
-        loss_0425_df.to_csv(data_path / "loss_0425_251209-1.csv", index=False)
+        loss_0425_df.to_csv(data_path / "loss_0425_251223-3b.csv", index=False)
+        # loss_0424_df.to_csv(data_path / "loss_0424_251223-3.csv", index=False)
+        # loss_0426_df.to_csv(data_path / "loss_0426_251223-3.csv", index=False)
 
         print(f"7: {loss_0424_df.shape}")
         print(f"8: {loss_0425_df.shape}")
@@ -279,8 +282,22 @@ class TestOryxSchemaSCD2(TestCase):
         pd.testing.assert_frame_equal(proof_df, expected_proof_df)
         pd.testing.assert_frame_equal(category_df, expected_category_df)
         pd.testing.assert_frame_equal(master_df, expected_master_df)
+
+        col_list = ["party","category","type_name","loss_type","proof"]
+
+        diff_loss_0424 = compare_dataframes(loss_0424_df, expected_loss_0424_df, compare_cols=col_list)
+        print(f"Diff for 0424: {diff_loss_0424.shape}")
+        print(diff_loss_0424.to_string())
         pd.testing.assert_frame_equal(loss_0424_df, expected_loss_0424_df)
+
+        diff_loss_0425 = compare_dataframes(loss_0425_df, expected_loss_0425_df, compare_cols=col_list)
+        print(f"Diff for 0425: {diff_loss_0425.shape}")
+        print(diff_loss_0425.to_string())
         pd.testing.assert_frame_equal(loss_0425_df, expected_loss_0425_df)
+
+        diff_loss_0426 = compare_dataframes(loss_0426_df, expected_loss_0426_df, compare_cols=col_list)
+        print(f"Diff for 0426: {diff_loss_0426.shape}")
+        print(diff_loss_0426.to_string())
         pd.testing.assert_frame_equal(loss_0426_df, expected_loss_0426_df)
         # pd.testing.assert_frame_equal(loss_df, expected_loss_df)
 
