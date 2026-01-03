@@ -68,50 +68,71 @@ class OryxLossesItem(ETL):
                 regexp_replace(col("loss_item"), r"[()]", "")
             )
 
-            # 2. Handle ", and <number>" → ",<number>"
+            # 2. Replace "and" ONLY when it connects numbers → comma
             .withColumn(
                 "cleaned_items",
                 regexp_replace(
                     col("cleaned_items"),
-                    r",\s*and\s*(?=\d)",
+                    r"(?<=\d)\s*,?\s*and\s+(?=\d)",
                     ","
                 )
             )
 
-            # 3. Handle "<number> and <number>" → "<number>,<number>"
+            # 3. Add missing commas between numbers
+            #    "69 70" → "69,70"
             .withColumn(
                 "cleaned_items",
                 regexp_replace(
                     col("cleaned_items"),
-                    r"(?<=\d)\s+and\s+(?=\d)",
+                    r"(?<=\d)\s+(?=\d)",
                     ","
                 )
             )
 
-            # 4. Replace remaining whitespace with underscore
+            # 4. Normalize comma spacing
             .withColumn(
                 "cleaned_items",
-                regexp_replace(col("cleaned_items"), r"\s+", "_")
+                regexp_replace(
+                    col("cleaned_items"),
+                    r"\s*,\s*",
+                    ","
+                )
             )
 
-            # 5. Remove underscores following commas
+            # 5. Insert comma between numeric block and following text
+            #    "133 destroyed" → "133,destroyed"
             .withColumn(
                 "cleaned_items",
-                regexp_replace(col("cleaned_items"), r",_+", ",")
+                regexp_replace(
+                    col("cleaned_items"),
+                    r"(?<=\d)\s+(?=[A-Za-z])",
+                    ","
+                )
             )
 
-            # 6. Normalize commas
+            # 6. Insert comma after quoted ship name if followed by text
+            #    "'Donbass' sunk" → "'Donbass', sunk"
             .withColumn(
                 "cleaned_items",
-                regexp_replace(col("cleaned_items"), r",+", ",")
+                regexp_replace(
+                    col("cleaned_items"),
+                    r"'\s+(?=[A-Za-z])",
+                    "', "
+                )
             )
 
-            # 7. Trim leading/trailing commas
+            # 7. Trim
             .withColumn(
                 "cleaned_items",
-                trim(regexp_replace(col("cleaned_items"), r"^,|,$", ""))
+                regexp_replace(col("cleaned_items"), r"^\s+|\s+$", "")
             )
         )
+
+        # self.data.show()
+        # self.data.select("loss_item").show()
+        # self.data.select("cleaned_items").show()
+        # pddf = self.data.toPandas()
+        # print(pddf.to_string())
 
     def _split_to_losses(self):
         """

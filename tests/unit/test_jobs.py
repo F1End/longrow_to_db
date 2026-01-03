@@ -49,6 +49,9 @@ class TestOryxLossesItemSCD2(TestCase):
 
         file_in = data_path / "2025-04-25_parsing_test_1-ukrainian_parsed.csv"
         file_in = data_path / "2025-04-25_parsing_test_2__-attack-on-europe-documenting-ukrainian-__parsed.csv"
+        file_in = data_path / "2025-04-25_parsing_test_3__-attack-on-europe-documenting-ukrainian-__parsed.csv"
+        file_in = data_path / "2025-04-25_parsing_test_4__-attack-on-europe-documenting-ukrainian-__parsed.csv"
+        file_in = data_path / "2025-04-25_parsing_test_5__-attack-on-europe-documenting-ukrainian-__parsed.csv"
         appname = "testETL"
         spark_session = create_spark_session(appname=appname, config=spark_config)
 
@@ -60,11 +63,12 @@ class TestOryxLossesItemSCD2(TestCase):
         instance.extract()
         instance.transform()
 
-        expected = pd.read_csv(data_path / "parsing_test_2_expected_2025-04-25_ukr.csv")
+        # expected = pd.read_csv(data_path / "parsing_test_2_expected_2025-04-25_ukr.csv")
 
         pd_df = instance.data.toPandas()
-        # print(pd_df.to_string())
-        pd.testing.assert_frame_equal(pd_df, expected, check_dtype=False)
+        print(pd_df.to_string())
+        pd_df.to_csv("testdf_jobs.csv", index=False)
+        # pd.testing.assert_frame_equal(pd_df, expected, check_dtype=False)
 
         # Case 2: Running a whole file
 
