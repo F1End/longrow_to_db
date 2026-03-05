@@ -128,12 +128,6 @@ class OryxLossesItem(ETL):
             )
         )
 
-        # self.data.show()
-        # self.data.select("loss_item").show()
-        # self.data.select("cleaned_items").show()
-        # pddf = self.data.toPandas()
-        # print(pddf.to_string())
-
     def _split_to_losses(self):
         """
 
@@ -263,6 +257,7 @@ class OryxLossesCategories(OryxLossesProofs):
         self._trim_df()
         self.data = self.data.select("category_name").distinct()
         self.data = self.data.withColumnRenamed("category_name", "category")
+        df = self.data.toPandas()
         if self.metadata:
             pass
 
@@ -300,10 +295,12 @@ class OryxLossesItemSCD2(OryxLossesItem):
         persist_data_scd2(self, out_path=path, db_table=table, filter_columns=["party"])
 
     def _get_category_keys(self) -> dict:
+        col_name = "category_name"
         with self.db as db_connection:
-            categories_and_keys = db_connection.fetch_unique_data(self.data, "category_name", "category_names", "category")
+            categories_and_keys = db_connection.fetch_unique_data(self.data, col_name, "category_names", "category")
         logger.debug(f"Fetched {len(categories_and_keys)} categories for look-up.")
         categories_and_keys = {cat: key for key, cat in categories_and_keys}
+        logger.info(categories_and_keys)
         return categories_and_keys
 
     def _replace_category_with_keys(self):

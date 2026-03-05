@@ -155,15 +155,18 @@ class DBConn:
         SELECT 1
         FROM {table_name} s2
         WHERE {sql_filter}
+        AND s2.stop_date = "2222-12-31"
         )
         """.replace(f"{temp_table_name}.", "s1.").replace(f"{table_name}.", "s2.")
+
         return sql
 
     def _create_temp_table(self, table_name: str) -> str:
-        temp_table_name = "temp_" + table_name
+        ## import random
+        temp_table_name = "temp_" + table_name ## + "_" + str(random.randint(0, 9999))
         logger.info(f"Creating TEMPORARY table {temp_table_name} if does not exist")
-        cmd = self._temp_table_cmd(table_name)
-        logger.debug(f"Running command:\n {cmd}")
+        cmd = self._temp_table_cmd(table_name, temp_tbl_name=temp_table_name)
+        logger.info(f"Running command:\n {cmd}") ##
         self.cursor.execute(cmd)
         return temp_table_name
 
@@ -183,7 +186,8 @@ class DBConn:
         return sql
 
     def fetch_unique_data(self, spark_df, spark_df_col_nane, db_table_name, db_col_name):
-        data_list = self._spark_col_to_list(spark_df, spark_df_col_nane)
+        data_list = self._spark_col_to_list(spark_df, spark_df_col_nane) ## Need to trim this from trailing spaces and \xa0
+        data_list = [cat.strip() for cat in data_list]
         placeholders = ",".join(["?"] * len(data_list))
         sql = f"SELECT * FROM {db_table_name} WHERE {db_col_name} in ({placeholders})"
         logger.debug(f"Parsed item count: {len(placeholders)}")
@@ -234,6 +238,7 @@ class DBConn:
         tbl_info_sql = f"""SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?;"""
         origin_tbl_cmd = self.run_query(tbl_info_sql, [table_name])[0]
         temp_tbl_cmd = origin_tbl_cmd[0].replace(f"CREATE TABLE ", "CREATE TEMP TABLE ")
+        # temp_tbl_cmd = origin_tbl_cmd[0] ##
         if temp_tbl_name:
             temp_tbl_cmd = temp_tbl_cmd.replace(table_name, temp_tbl_name)
         else:
